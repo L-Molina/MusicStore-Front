@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { HOME_HERO_IMAGE, STITCH_CATEGORY_TILES } from '../../constants/stitchAssets.js'
+import guitarAmpBg from '../../assets/guitar-amp-bg.jpg'
 import { PRODUCTS } from '../../data/products.js'
 import { useCart } from '../../hooks/useCart.js'
 import { formatPriceEUR } from '../../utils/formatPrice.js'
@@ -36,7 +37,7 @@ export default function Home() {
     <>
       <header className="relative flex h-[min(870px,90vh)] w-full items-center overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
-          <img alt="" className="size-full object-cover opacity-60" src={HOME_HERO_IMAGE} />
+          <img alt="" className="size-full object-cover opacity-60" src={guitarAmpBg} />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8">
