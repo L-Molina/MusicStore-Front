@@ -1,18 +1,55 @@
-# React + Vite
+# MusicStore Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación frontend del sistema MusicStore. Este proyecto proporciona la interfaz de usuario para explorar productos, gestionar un carrito de compras e interactuar con servicios backend a través de APIs.
 
-Currently, two official plugins are available:
+## Tabla de Contenidos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [Descripción General](#descripción-general)
+- [Tecnologías](#tecnologías)
+- [Funcionalidades](#funcionalidades)
+- [Instalación](#instalación)
+- [Variables de Entorno](#variables-de-entorno)
+- [Scripts Disponibles](#scripts-disponibles)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Integración con API](#integración-con-api)
+- [Contribuciones](#contribuciones)
+- [Licencia](#licencia)
 
-## React Compiler
+---
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Descripción General
 
-Note: This will impact Vite dev & build performances.
+MusicStore Frontend es una aplicación web desarrollada con React que permite a los usuarios explorar un catálogo de productos relacionados con música, visualizar detalles y realizar acciones típicas de un e-commerce como agregar productos al carrito y generar pedidos.
 
-## Expanding the ESLint configuration
+Está diseñada para consumir una API REST y brindar una experiencia de usuario clara, moderna y responsiva.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Tecnologías
+
+- React
+- JavaScript (ES6+)
+- HTML5
+- CSS3
+- Node.js (entorno de desarrollo)
+- npm / yarn
+
+---
+
+## Funcionalidades
+
+- Listado y categorización de productos
+- Vista de detalle de productos
+- Gestión del carrito de compras
+- Integración con API backend
+- Diseño responsivo
+- Arquitectura basada en componentes
+
+---
+
+## Instalación
+
+1. Clonar el repositorio:
+
+```bash
+git clone https://github.com/L-Molina/MusicStore-Front.git
