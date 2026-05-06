@@ -6,6 +6,7 @@ import amplifiersBg from '../assets/marshall_amp.jpg'
 import audioProBg from '../assets/studio_console.jpg'
 import guitarAmpBg from '../assets/guitar-amp-bg.jpg'
 import logo from '../assets/logo.png'
+import logoText from '../assets/logo-text.png'
 
 /**
  * URLs y texto extraídos de los mocks Stitch (home_musicstore_v6, cat_logo_musicstore_v6).
@@ -13,6 +14,7 @@ import logo from '../assets/logo.png'
  */
 
 export const BRAND_LOGO_URL = logo;
+export const BRAND_LOGO_TEXT_URL = logoText;
 export const HOME_HERO_IMAGE = guitarAmpBg;
 
 /** Categorías principales → `cat` coincide con filtros del catálogo */
