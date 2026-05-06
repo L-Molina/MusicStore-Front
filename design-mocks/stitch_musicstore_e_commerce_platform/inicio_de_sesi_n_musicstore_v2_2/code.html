@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#e2e2e2",
+                        "inverse-primary": "#c00000",
+                        "on-error": "#690005",
+                        "inverse-surface": "#e2e2e2",
+                        "primary-fixed-dim": "#ffb4a8",
+                        "on-secondary-container": "#b7b5b4",
+                        "on-surface-variant": "#e8bdb6",
+                        "surface-bright": "#37393a",
+                        "on-primary-fixed-variant": "#930000",
+                        "tertiary-fixed": "#e4e2e1",
+                        "primary": "#ffb4a8",
+                        "on-primary": "#690000",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface": "#121414",
+                        "on-secondary-fixed-variant": "#474746",
+                        "outline-variant": "#5e3f3a",
+                        "surface-dim": "#121414",
+                        "primary-container": "#cc0000",
+                        "on-tertiary": "#303030",
+                        "primary-fixed": "#ffdad4",
+                        "surface-tint": "#ffb4a8",
+                        "inverse-on-surface": "#2f3131",
+                        "tertiary-container": "#656464",
+                        "surface-variant": "#333535",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#c8c6c5",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-tertiary-container": "#e4e1e1",
+                        "outline": "#ae8882",
+                        "surface-container-high": "#282a2b",
+                        "surface-container-highest": "#333535",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "on-primary-fixed": "#410000",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "tertiary-fixed-dim": "#c8c6c6",
+                        "surface-container-low": "#1a1c1c",
+                        "secondary-container": "#474746",
+                        "on-surface": "#e2e2e2",
+                        "on-secondary": "#313030",
+                        "background": "#121414",
+                        "tertiary": "#c8c6c6",
+                        "surface-container-lowest": "#0c0f0f",
+                        "surface-container": "#1e2020",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#ffdad4",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#c8c6c5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "md": "24px",
+                        "lg": "40px",
+                        "margin": "32px",
+                        "gutter": "24px",
+                        "xl": "64px",
+                        "sm": "12px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased">
+<!-- Auth Container -->
+<div class="min-h-screen flex flex-col items-center justify-center px-6 py-xl">
+<!-- Brand Identity Section -->
+<div class="flex flex-col items-center mb-4">
+<div class="flex items-center justify-center w-64 h-64">
+<img alt="MusicStore Logo" class="w-full h-full object-contain" data-alt="Sleek minimalist red electric guitar silhouette icon on a black background, professional music store branding" src="https://lh3.googleusercontent.com/aida/ADBb0uh2I0K_YA1OHo3wKwDc0NbwaGZC2KDBkrav8WfqhLaHwSfMFpZlz_i71zATLIByBrqdY5sB9XIz_qtLfU8tX7_r5pf2vyqZREorMhWHP7ZNk3oltKI2wQd_6smVgzvlBQc_98Bf60nSkFTNrNbQz-F3cMMkXNAzBtyjl1K5tw30Qp26aL9_hbPLNlJQ5AkNXQGVI59UI3gZpkBmOTfMtqaOTz9tC972AaWr_baOPfHcQ26RQjbUkuU0vw"/>
+</div>
+</div>
+<!-- Login Form Card -->
+<div class="w-full max-w-md bg-surface-container-low border border-outline-variant p-lg rounded-xl shadow-2xl">
+<form class="space-y-md">
+<!-- Email Field -->
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-secondary ml-1">Correo Electrónico</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary-container transition-colors">mail</span>
+<input class="w-full bg-black border border-outline-variant rounded-lg py-3 pl-10 pr-4 text-on-surface placeholder:text-on-secondary-fixed-variant focus:outline-none focus:border-primary-container transition-all" placeholder="tu@correo.com" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-xs">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-secondary ml-1">Contraseña</label>
+<a class="font-label-sm text-label-sm text-primary-container hover:underline" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary-container transition-colors">lock</span>
+<input class="w-full bg-black border border-outline-variant rounded-lg py-3 pl-10 pr-12 text-on-surface placeholder:text-on-secondary-fixed-variant focus:outline-none focus:border-primary-container transition-all" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center space-x-2">
+<input class="w-4 h-4 rounded border-outline-variant bg-black text-primary-container focus:ring-primary-container focus:ring-offset-black" id="remember" type="checkbox"/>
+<label class="font-label-md text-label-md text-secondary" for="remember">Mantener sesión iniciada</label>
+</div>
+<!-- Main Login Button -->
+<button class="w-full bg-primary-container hover:bg-inverse-primary text-white font-headline-md text-headline-md py-4 rounded-lg transition-all active:scale-95 duration-150 shadow-lg" type="submit">
+                    INICIAR SESIÓN
+                </button>
+</form>
+<!-- Divider -->
+<div class="relative my-lg">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant"></div>
+</div>
+<div class="relative flex justify-center text-xs">
+<span class="bg-surface-container-low px-4 text-secondary font-label-md tracking-widest">O CONTINÚA CON</span>
+</div>
+</div>
+<!-- Social Auth Grid -->
+<div class="grid grid-cols-2 gap-gutter">
+<button class="flex items-center justify-center space-x-2 border border-outline-variant bg-black hover:border-secondary py-3 rounded-lg transition-colors group active:scale-95">
+<img alt="Google" class="w-5 h-5" data-alt="Google colorful logo icon minimalist" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAe8LIB_fMvkmIVJXt1lvpA5izbhZdaGz4kOHOmeseWgQi3MMtTkGWwk6saZIpThRTmivLdqUjMWHkYvt-yrvzMIY6eJZ-wJbY4HzdRqeKdT0b--L_A2hvE3EjViW735mcA9yb_wu43IkXW4-WEcFvoocvY8sA1zLpiHismDyrYUq5ugSWYDhXsaqzEgnz9KZJSEXt5kuEDKcCcbNEjEK9QmxulShIcAVMgJdvyHgeZCoNnxVVgbBajSjiinrL0hxH4dTWkVY2QWp4"/>
+<span class="font-label-md text-on-surface">GOOGLE</span>
+</button>
+<button class="flex items-center justify-center space-x-2 border border-outline-variant bg-black hover:border-secondary py-3 rounded-lg transition-colors group active:scale-95">
+<span class="material-symbols-outlined text-on-surface" style="font-variation-settings: 'FILL' 1;">ios</span>
+<span class="font-label-md text-on-surface">APPLE</span>
+</button>
+</div>
+<!-- Registration Link -->
+<div class="mt-lg text-center">
+<p class="font-body-md text-on-surface-variant">
+                    ¿Aún no tienes cuenta? 
+                    <a class="text-primary-container font-semibold hover:underline decoration-2 underline-offset-4 ml-1" href="#">Regístrate gratis</a>
+</p>
+</div>
+</div>
+<!-- Footer Visual Hint -->
+<div class="mt-xl max-w-sm text-center">
+<p class="text-on-secondary-fixed-variant font-label-sm leading-relaxed">
+                Al iniciar sesión, aceptas nuestros Términos de Servicio y Política de Privacidad. MusicStore es una plataforma profesional de audio.
+            </p>
+</div>
+</div>
+</body></html>

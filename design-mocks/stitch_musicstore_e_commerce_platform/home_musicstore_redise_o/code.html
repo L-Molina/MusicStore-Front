@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed-variant": "#474746",
+                    "primary": "#ffb4a8",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "surface": "#121414",
+                    "surface-tint": "#ffb4a8",
+                    "outline-variant": "#5e3f3a",
+                    "on-secondary": "#313030",
+                    "tertiary-fixed-dim": "#c8c6c6",
+                    "tertiary-fixed": "#e4e2e1",
+                    "on-primary-container": "#ffdad4",
+                    "on-error-container": "#ffdad6",
+                    "secondary-container": "#474746",
+                    "surface-container": "#1e2020",
+                    "secondary": "#c8c6c5",
+                    "on-background": "#e2e2e2",
+                    "primary-fixed": "#ffdad4",
+                    "on-primary-fixed": "#410000",
+                    "tertiary-container": "#656464",
+                    "on-primary": "#690000",
+                    "surface-container-high": "#282a2b",
+                    "error": "#ffb4ab",
+                    "tertiary": "#c8c6c6",
+                    "outline": "#ae8882",
+                    "surface-container-lowest": "#0c0f0f",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-error": "#690005",
+                    "surface-container-low": "#1a1c1c",
+                    "inverse-primary": "#c00000",
+                    "primary-container": "#cc0000",
+                    "primary-fixed-dim": "#ffb4a8",
+                    "error-container": "#93000a",
+                    "on-surface": "#e2e2e2",
+                    "on-tertiary-fixed-variant": "#474747",
+                    "on-surface-variant": "#e8bdb6",
+                    "inverse-surface": "#e2e2e2",
+                    "on-tertiary-container": "#e4e1e1",
+                    "surface-bright": "#37393a",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "inverse-on-surface": "#2f3131",
+                    "background": "#121414",
+                    "on-tertiary": "#303030",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-fixed-variant": "#930000",
+                    "on-secondary-container": "#b7b5b4",
+                    "surface-dim": "#121414",
+                    "surface-container-highest": "#333535",
+                    "surface-variant": "#333535"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "64px",
+                    "lg": "40px",
+                    "gutter": "24px",
+                    "md": "24px",
+                    "base": "8px",
+                    "sm": "12px",
+                    "xs": "4px",
+                    "margin": "32px"
+            },
+            "fontFamily": {
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { background-color: #000000; color: #e2e2e2; }
+    </style>
+</head>
+<body class="font-body-md bg-black">
+<nav class="bg-black text-[#CC0000] font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-wide docked full-width top-0 border-b border-[#333333] sticky z-50">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-black text-[#CC0000] tracking-tighter">MusicStore</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-[#CC0000] border-b-2 border-[#CC0000] pb-1 hover:text-white hover:border-white transition-all duration-200 scale-95 active:opacity-80" href="#">Guitarras</a>
+<a class="text-gray-400 hover:text-white hover:border-white transition-all duration-200 scale-95 active:opacity-80" href="#">Bajos</a>
+<a class="text-gray-400 hover:text-white hover:border-white transition-all duration-200 scale-95 active:opacity-80" href="#">Amplificadores</a>
+<a class="text-gray-400 hover:text-white hover:border-white transition-all duration-200 scale-95 active:opacity-80" href="#">Accesorios</a>
+<a class="text-gray-400 hover:text-white hover:border-white transition-all duration-200 scale-95 active:opacity-80" href="#">Studio</a>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+<button class="text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+<button class="md:hidden text-gray-400">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</nav>
+<header class="relative w-full h-[870px] flex items-center overflow-hidden bg-black">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover opacity-60" data-alt="Cinematic close-up of a premium electric guitar and high-end tube amplifier in a dark studio with dramatic red backlighting and smoke" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfunctZw1FmFfgorGjoS6CRAAqXhRst17WKvbFzLrjf9iF7zZmMUGRa18kaYiDB-jzfxceRTo4kJLLCNxZ-BzTGmRXuNaTTRsOhM2XVmnoJqcmI09ZDNt4Utu0uZqPcDv4K9MGUMofgciGQsQexnwYfdgUKeUuDdx3K7iaHgagTGdar8OLD-AQ5fffl6UNlNqRKFhAZDRP5ACXzKSQU9MBY-wIBlvHQFFYsFGmeqeI7L6oJDeYuBerCE7EzNyK4z4OdexRJtKn4_Y"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+</div>
+<div class="relative z-10 max-w-screen-2xl mx-auto px-8 w-full">
+<div class="max-w-2xl">
+<span class="font-label-md text-primary-container mb-4 block">EQUIPAMIENTO DE ÉLITE</span>
+<h1 class="font-headline-xl text-white mb-6 uppercase">La Precisión del Sonido Puro.</h1>
+<p class="font-body-lg text-secondary mb-8 max-w-lg">Explora nuestra colección curada de instrumentos y herramientas de audio para el músico profesional contemporáneo.</p>
+<div class="flex gap-4">
+<button class="bg-[#CC0000] text-white px-8 py-4 font-label-md hover:bg-[#b30000] transition-colors scale-95 active:opacity-80">EXPLORAR CATÁLOGO</button>
+<button class="border border-[#333333] text-white px-8 py-4 font-label-md hover:border-white transition-colors scale-95 active:opacity-80">NOVEDADES</button>
+</div>
+</div>
+</div>
+</header>
+<section class="max-w-screen-2xl mx-auto px-8 py-20 bg-black">
+<div class="flex justify-between items-end mb-12">
+<div>
+<h2 class="font-headline-lg text-white mb-2 uppercase">Categorías Principales</h2>
+<div class="h-1 w-12 bg-primary-container"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+<div class="group relative aspect-[4/5] bg-[#1A1A1A] border border-[#333333] overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="Sleek black electric guitar body close-up against a dark background with sharp lighting highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGdrbFvBpcNDUWRQgugmJj9viCfrVEbCfO2D1m75ugIdZQ7oK56B6qa8sgTT17GsIRnzicZdi7QeXXqO-BTcsujdYYKJBU8C7fwI3C88XUazhK2e730gqU6AZz6A_3AtEQ_prDK695dDxPi0qQagaYoc6QkuivTKRE3v_LmLss8WSZ2XBUPatuy11uxzp1Kg2sbSvKSze-44RNKEvQBp0pCuc26RTtQWEwGJnCLH7ZH4C4kHaI1xY-pmhZKueA8SWnVJa17nMkWF4"/>
+<div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black to-transparent">
+<p class="font-label-md text-white">GUITARRAS</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] bg-[#1A1A1A] border border-[#333333] overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="Details of a vintage bass guitar strings and pickups with moody studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9frQ6LNqy_Ie_fxCXbD9Gzjb0bjunZ0OJhHkjxo5WLgViRKBJ8kX1W8m-JvfQiGxzgU5UYW3pDMzdWX8bT4PMTl-fBudRdTfmapejZZagv5xMBHDqgHZgbwB-480ZIHYy5xKKw2qxUj92hD88y3CZudbETk5khtBqwaFfTJdEa2DZ9_LWRezxo3o0tZNOm0TztKnrENRiChFJFqUN_eYmJ4adAvXD0ujeDMVGnE6_0udyks-71qs5Gsg174IvmLUjy5U0pzYHy44"/>
+<div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black to-transparent">
+<p class="font-label-md text-white">BAJOS</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] bg-[#1A1A1A] border border-[#333333] overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="Professional guitar amplifier mesh and controls with a red power light glowing in the dark" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9zOSjGmkdSeJgEggAaojGWfZMj0CLjjIQ2Ov_PRYq0x8FEbzmyXoDdczkWcsyAozBZ1M39Zcw3WEE-bDPpCCWzkPuY0tKYAkO5yLXsTFnQhwcGmlWtAnT53KsPwqEMG2quD_nOXKyzPcGZ4jcnhVw64OG587P_qWApc9ARZi8I_MCHkX08yZ48JrDV5QVUrNh4G1FaOBpOE2EB9vQcj9tZuatr4XRWq99CRTgUgSTglOBbIlxOmIAQkaTrSIKFaSDG28Jiu-PErA"/>
+<div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black to-transparent">
+<p class="font-label-md text-white">AMPLIFICADORES</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] bg-[#1A1A1A] border border-[#333333] overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="Selection of high-quality leather guitar straps and effect pedals on a wooden surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASG_qbFRLlFN7-3lko1rCiiwZWhKcESgvJpTGMH3rZmAPJqEwEQsZFdf9eLm0sA_DkdG1rU5DNLITDFtjKew08c4oiqHJaSDb1ZByuRgggAjpbwgrWOM42OBTxKCMLi128p3ECl_KYIt4Hb9jQT7LSCK42YtD2ciOX9fLEw13emMotsZisptJKFuwp-tkOziF-XlCu6PzNZRZ_pJx63rwgT0z11yLjvbEMsJw_GNg8LBcdtsaVG3dSacmOaFnjO-qbd2TKQvfVFbU"/>
+<div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black to-transparent">
+<p class="font-label-md text-white">ACCESORIOS</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] bg-[#1A1A1A] border border-[#333333] overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="Modern recording studio desk with studio monitors and audio interface in a dark environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7Jpc4CgU09ri1HQGfjMRa-_1S6xY2bqiFfNDswdaXFWQMJNW2BehXm9J8CiBOdtGjbzXso3EGGxjlG8vIgwtgL6-gHnNCvhJngDo3Sq-a0j-ZX9kHiPRxTEfh60f7V3DvOidVUD6pUNRPWYX3IUk1mTS3iDcFzA_F9gmPd6qRlhvqmpgrFjKS5YMGDqvRLBKtupYgEIl-1IquXqrwNiGffAt0onl_WNaAm5DYlEQtTuPuwftGAE1vaed5Jt7MoZtHbMA62I4Om34"/>
+<div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black to-transparent">
+<p class="font-label-md text-white">AUDIO PRO</p>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-[#1A1A1A] border-y border-[#333333] py-20">
+<div class="max-w-screen-2xl mx-auto px-8">
+<div class="flex items-center gap-4 mb-12">
+<h2 class="font-headline-lg text-white uppercase">Novedades</h2>
+<div class="flex-grow h-px bg-[#333333]"></div>
+<a class="font-label-sm text-primary-container hover:text-white transition-colors" href="#">VER TODO</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="group flex flex-col">
+<div class="relative bg-black border border-[#333333] p-8 aspect-square flex items-center justify-center mb-6 overflow-hidden group-hover:border-white transition-colors">
+<img class="max-w-full h-auto object-contain" data-alt="Modern high-end electric guitar in matte black finish on a minimalist stand" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG8yHR51avEx8aY2LRw4sbUMd3bkdbY-24o1f--h-j7R3hMSWeLv9-5fxSsGT-PM6GiJXkYMllR7Hd8R5STH4APy4oHYe9_MFi-yJyl2FTiz2EGb94dMG8qRDN0uLPd-nWtEhmxJq24upi1DfAo9Ep21vA5YZpdm8lWkMWVgQ1NW2pYJk0SA5jMyuo1djHRDDua17lkjIG_YDlCc8NmcJxrPM7LB9kwSiuFjGvnIMOLTJXPlYdcOREUAB8JEGVXVHpyYwm_X4wyks"/>
+<span class="absolute top-4 left-4 bg-[#CC0000] text-white px-3 py-1 font-label-sm">NUEVO</span>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<button class="bg-white text-black p-4 rounded-full"><span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span></button>
+</div>
+</div>
+<p class="font-label-sm text-primary-container mb-1">GUITARRAS</p>
+<h3 class="font-headline-md text-white mb-2 leading-tight">Dark Series Stratocaster</h3>
+<p class="font-body-md text-secondary">$1,499.00</p>
+</div>
+<div class="group flex flex-col">
+<div class="relative bg-black border border-[#333333] p-8 aspect-square flex items-center justify-center mb-6 overflow-hidden group-hover:border-white transition-colors">
+<img class="max-w-full h-auto object-contain" data-alt="Professional guitar distortion pedal with metallic enclosure and red LED lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfhLOu98mpsrekQOzCMgrZZ_q72CXHx2MCqXNNpZZFQjK8TczstalSATIGW1ULneKC-OzSFKfCd5k21i9khR2M0Qvnrg-3GnstCgSVwtoiAvqgnz34Shp3z2bo3mCu_jbW9F7RMd6ws0TeS0iFE66_M0s4-YtL-P6GfOpFZyVuUIWYZ5Vg-r6mPXkMBbGsBzZKLKTCqn10oFgCF9tEr6CZxsDIjgacNMFkrbby3hvzMlt4C2LK7TRFht5g5Q3yVtdZF5DTV1IH2qg"/>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<button class="bg-white text-black p-4 rounded-full"><span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span></button>
+</div>
+</div>
+<p class="font-label-sm text-primary-container mb-1">EFECTOS</p>
+<h3 class="font-headline-md text-white mb-2 leading-tight">Overdrive Precision V3</h3>
+<p class="font-body-md text-secondary">$249.00</p>
+</div>
+<div class="group flex flex-col">
+<div class="relative bg-black border border-[#333333] p-8 aspect-square flex items-center justify-center mb-6 overflow-hidden group-hover:border-white transition-colors">
+<img class="max-w-full h-auto object-contain" data-alt="Boutique tube guitar amplifier with black leather handle and metal corners" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwxMRpFmEIXBColqJymzdNAJzJzAfb8cal24lA5G7SleCUmmFoUVYvJG-HG6f2G3Lvgvyp9E-MmL8B3bdoOHHfCUVz1EKZejrURs3KED-3ar5FBDMJbKU4RtlbqPVps1twQmwBNbDB0z3hUqME9xMlQCUChszvRJ9302XIrQ5XYZVTHQ8RFrhsIMeIuxADIKwDiMbNClimRpbkdhIPDE31LfzN678XnWX2kzUGPOjiRXHmPj1iJRuqEXucd1Jogno2i35frip6OhY"/>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<button class="bg-white text-black p-4 rounded-full"><span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span></button>
+</div>
+</div>
+<p class="font-label-sm text-primary-container mb-1">AMPLIFICADORES</p>
+<h3 class="font-headline-md text-white mb-2 leading-tight">Custom Shop Head 50W</h3>
+<p class="font-body-md text-secondary">$2,199.00</p>
+</div>
+<div class="group flex flex-col">
+<div class="relative bg-black border border-[#333333] p-8 aspect-square flex items-center justify-center mb-6 overflow-hidden group-hover:border-white transition-colors">
+<img class="max-w-full h-auto object-contain" data-alt="Premium handcrafted leather guitar strap with silver hardware and detailed stitching" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8Ki9P45dD3i5ugb242G4vLb5SlDU2_6893t88AvWY8KaOqQfOJy0rTbkSxC3TnECxeF4UzD57mz7HaDFyUncrUPtae-ZIpMkAXc4hOq1Ki1NUa9-o6bm6OM9U7uXVbR3VCLzgz_hvSmkoneWMPtToI4Y_1X1KaLEEXiNzrQtySscWT2Uj2q5GzQ9Tp8GeNvW6NzPhQgxri9ulrX-RpN1Y6bcpcBqBcHwqypDeURhcVuUpwZIEGps4FL5E_sSlIq-LPxn9oTqJWNM"/>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<button class="bg-white text-black p-4 rounded-full"><span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span></button>
+</div>
+</div>
+<p class="font-label-sm text-primary-container mb-1">ACCESORIOS</p>
+<h3 class="font-headline-md text-white mb-2 leading-tight">Correa Artisan Cuero Pro</h3>
+<p class="font-body-md text-secondary">$89.00</p>
+</div>
+</div>
+</div>
+</section>
+<section class="max-w-screen-2xl mx-auto px-8 py-20 bg-black">
+<h2 class="font-headline-lg text-white mb-12 uppercase text-center">Equipamiento Recomendado</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border border-[#333333]">
+<div class="border-b md:border-b-0 md:border-r border-[#333333] p-10 hover:bg-[#1A1A1A] transition-colors group">
+<div class="flex justify-between items-start mb-10">
+<div>
+<p class="font-label-sm text-gray-500 mb-1">01</p>
+<h4 class="font-headline-md text-white">The Soloist Bundle</h4>
+</div>
+<span class="material-symbols-outlined text-[#CC0000]" data-icon="trending_up">trending_up</span>
+</div>
+<p class="font-body-md text-secondary mb-8">El set definitivo para el guitarrista moderno: Guitarra, Amplificador de 20W y cable de alta fidelidad.</p>
+<a class="font-label-md text-white flex items-center gap-2 group-hover:text-[#CC0000] transition-colors" href="#">
+                    CONFIGURAR <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="border-b md:border-b-0 lg:border-r border-[#333333] p-10 hover:bg-[#1A1A1A] transition-colors group">
+<div class="flex justify-between items-start mb-10">
+<div>
+<p class="font-label-sm text-gray-500 mb-1">02</p>
+<h4 class="font-headline-md text-white">Studio Master Set</h4>
+</div>
+<span class="material-symbols-outlined text-[#CC0000]" data-icon="mic_external_on">mic_external_on</span>
+</div>
+<p class="font-body-md text-secondary mb-8">Audio interface de 4 canales junto con monitores de campo cercano para una mezcla perfecta.</p>
+<a class="font-label-md text-white flex items-center gap-2 group-hover:text-[#CC0000] transition-colors" href="#">
+                    CONFIGURAR <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="p-10 hover:bg-[#1A1A1A] transition-colors group">
+<div class="flex justify-between items-start mb-10">
+<div>
+<p class="font-label-sm text-gray-500 mb-1">03</p>
+<h4 class="font-headline-md text-white">Bass Foundation</h4>
+</div>
+<span class="material-symbols-outlined text-[#CC0000]" data-icon="music_note">music_note</span>
+</div>
+<p class="font-body-md text-secondary mb-8">Bajo activo de 5 cuerdas con funda rígida y afinador de precisión integrado.</p>
+<a class="font-label-md text-white flex items-center gap-2 group-hover:text-[#CC0000] transition-colors" href="#">
+                    CONFIGURAR <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+</section>
+<footer class="bg-[#1A1A1A] text-[#CC0000] font-['Plus_Jakarta_Sans'] text-xs uppercase tracking-widest full-width border-t border-[#333333] opacity-90">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-8 py-12 gap-6 max-w-screen-2xl mx-auto">
+<div class="flex flex-col gap-4">
+<div class="text-lg font-bold text-white">MusicStore</div>
+<p class="text-gray-500 lowercase normal-case tracking-normal max-w-xs">© 2024 MusicStore. Precision utilitaria para músicos.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-gray-500 hover:text-[#CC0000] transition-colors" href="#">Privacidad</a>
+<a class="text-gray-500 hover:text-[#CC0000] transition-colors" href="#">Términos</a>
+<a class="text-gray-500 hover:text-[#CC0000] transition-colors" href="#">Soporte</a>
+<a class="text-gray-500 hover:text-[#CC0000] transition-colors" href="#">Envíos</a>
+</div>
+<div class="flex gap-4">
+<button class="w-10 h-10 rounded-full border border-[#333333] flex items-center justify-center hover:border-white transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-[#333333] flex items-center justify-center hover:border-white transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="mail">mail</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>

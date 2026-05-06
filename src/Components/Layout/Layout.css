@@ -1,0 +1,12 @@
+.layout-root {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  background-color: #000000;
+  color: #ba203f;
+}
+
+.layout-main {
+  flex: 1 1 auto;
+  width: 100%;
+}

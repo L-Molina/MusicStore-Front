@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #000000;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#e2e2e2",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "secondary-fixed": "#e5e2e1",
+                      "on-error": "#690005",
+                      "tertiary-fixed": "#e4e2e1",
+                      "on-surface-variant": "#b9cacb",
+                      "on-secondary-fixed-variant": "#474746",
+                      "surface-bright": "#37393a",
+                      "on-primary": "#00363a",
+                      "inverse-primary": "#006970",
+                      "primary": "#dbfcff",
+                      "outline-variant": "#3b494b",
+                      "surface-container-lowest": "#0c0f0f",
+                      "on-secondary": "#313030",
+                      "on-tertiary": "#303030",
+                      "surface": "#121414",
+                      "secondary-container": "#474746",
+                      "on-tertiary-fixed-variant": "#474746",
+                      "surface-dim": "#121414",
+                      "on-tertiary-fixed": "#1b1c1c",
+                      "on-error-container": "#ffdad6",
+                      "primary-container": "#00f0ff",
+                      "primary-fixed-dim": "#00dbe9",
+                      "surface-container": "#1e2020",
+                      "inverse-on-surface": "#2f3131",
+                      "on-tertiary-container": "#5f5e5e",
+                      "on-primary-fixed": "#002022",
+                      "surface-container-high": "#282a2b",
+                      "tertiary": "#f8f5f5",
+                      "on-secondary-container": "#b7b5b4",
+                      "on-primary-container": "#006970",
+                      "tertiary-container": "#dbd9d8",
+                      "on-primary-fixed-variant": "#004f54",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "error": "#ffb4ab",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "background": "#121414",
+                      "surface-tint": "#00dbe9",
+                      "surface-variant": "#333535",
+                      "primary-fixed": "#7df4ff",
+                      "on-background": "#e2e2e2",
+                      "on-surface": "#e2e2e2",
+                      "outline": "#849495",
+                      "surface-container-low": "#1a1c1c",
+                      "secondary": "#c8c6c5",
+                      "surface-container-highest": "#333535",
+                      "error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "md": "16px",
+                      "container-max": "1280px",
+                      "unit": "4px",
+                      "xxl": "80px",
+                      "xl": "40px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "body-md": ["Plus Jakarta Sans"],
+                      "headline-xl": ["Plus Jakarta Sans"],
+                      "body-lg": ["Plus Jakarta Sans"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "label-md": ["Plus Jakarta Sans"],
+                      "label-sm": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-black text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-black border-b border-[#333333] sticky top-0 z-50">
+<div class="flex items-center justify-between px-8 py-4 w-full max-w-[1280px] mx-auto">
+<div class="flex items-center gap-12">
+<span class="text-xl font-bold tracking-tighter text-white">MusicStore</span>
+<nav class="hidden md:flex gap-8">
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-[#00F0FF] border-b-2 border-[#00F0FF] pb-1 transition-colors duration-200" href="#">Guitars</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-gray-400 hover:text-white transition-colors duration-200" href="#">Basses</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-gray-400 hover:text-white transition-colors duration-200" href="#">Accessories</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-gray-400 hover:text-white transition-colors duration-200" href="#">Studio Gear</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">search</span>
+<input class="w-full bg-[#1A1A1A] border border-[#333333] rounded-sm py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-[#00F0FF] transition-colors" placeholder="Search gear..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+<button class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-gray-400 hover:text-white transition-colors duration-200">Login</button>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-8 py-12">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-8 text-label-sm font-label-sm text-gray-500">
+<a class="hover:text-[#00F0FF]" href="#">Guitars</a>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<a class="hover:text-[#00F0FF]" href="#">Electric</a>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-on-surface">Custom Shop Masterbuilt</span>
+</nav>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+<!-- Left: Gallery (Asymmetric Layout) -->
+<div class="lg:col-span-7 space-y-6">
+<div class="aspect-[4/5] bg-[#1A1A1A] border border-[#333333] overflow-hidden group">
+<img alt="Custom Shop Electric Guitar Main View" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Close-up of a high-end matte black electric guitar with gold hardware resting against a dark studio background, professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdXisi7z5fbJM7UDvhar65qHXewsFlFDhiZG0JVEBU8jrjjj3XQ4lZYgAwPcsOP7IgO7wLn8rprd4QCZVZiDD5Z2kk4eRpxxriaxPL0lSaVWzRErTxW6b3uYGlBIY8D2hOBUt6AvI26IJiogiN2uzYpXtaZbymJ72yRCzgu11dyfb-Nn1aYLFF73xqpP1WiXydAIcQtDghca3o-pbIdjC7ggFnZhomRCM6z-11BVOswiSUqudvP-hXIMZ2bnXNXGiWDSaFi94U1aw"/>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="aspect-square bg-[#1A1A1A] border border-[#333333] overflow-hidden">
+<img alt="Guitar Headstock Detail" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all cursor-pointer" data-alt="Detailed close-up of a guitar headstock with chrome tuning pegs and intricate logo engraving, sharp focus, low key lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOqIqV5U1usdoPCX9mwEmi5HgQkz0KYAMfbiV8bmhrD9DtNv5x-m2fsMujnmsXIH28xl9QZw6bsgS3m6ZRYtSiMsviBcRCIZL3fj-YEz744dMuEJkXRiAkS3SaifsNI_xLEL1CHk_c7W8Qz2qaYPrcXLeIdrTaO-vdQFWZlL3WDsnAK5raYbdMhLTFvre5DUTN9GtY19OCbvc616V90pBAIqSlhs79EvkoOs-uH_6DbrXb3IMna7Gu9TvLSTgdqYOrZ4c85ACHhI"/>
+</div>
+<div class="aspect-square bg-[#1A1A1A] border border-[#333333] overflow-hidden">
+<img alt="Guitar Pickups" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all cursor-pointer" data-alt="Close-up of guitar pickups and volume knobs on a textured black body, high contrast lighting highlighting the metallic surfaces" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhXGRUyToIcuKfsSgtQ9LdZF80rMY7tpNKdZXkUbd0TpngkwWebZ_tQDgz6trrw_8t-HBU3wQWXgm2D3znrzVC8s5TxdJAE9CEukFEyMDljZ5MCfwZ8M60G4VIWUsJqlV1fYLe1gWh1P1y75mjQnjY89xyTzsPJjvKN0tvnj20cfrWLo4slCC18thcbONHuHlrkkobsXkpTxsNYlWFTl613EGBI-lzTLrHljBIHeO0JZp5fn_Z-XD_CRYDzL_pNe0kbK2U6b3w5DI"/>
+</div>
+<div class="aspect-square bg-[#1A1A1A] border border-[#333333] overflow-hidden">
+<img alt="Guitar Fretboard" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all cursor-pointer" data-alt="Perspective shot of a dark wood guitar fretboard with pearl inlays and polished frets, shallow depth of field" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ofaSOj__WA6Ewc7PRa8POFM4M51P_neHjhANfbqZBOZOTHQG4hQOJYwgYYM4stdRrlYFc2X8XCBAQAzC9NScW8KauuthS46PKdozfMfxlkvDJ9DPMmTrov8u4zYh9bGgJEsJXcCSH7zIFRo4ScgGDTvfSz4RTVFjWMuqeMO2HydiEXVT08CrVy013mveR17l-ifaVz9NGmuH2WPLxQHKGsrlZQbSX21PbDAzMshBdyPKuSfB72S4uTzIHV0lIo5qd2vTMz0n_BE"/>
+</div>
+</div>
+</div>
+<!-- Right: Product Details -->
+<div class="lg:col-span-5 space-y-10">
+<div class="space-y-4">
+<div class="flex gap-2">
+<span class="bg-[#333333] text-white px-3 py-1 text-[10px] uppercase tracking-widest font-bold rounded-full">Custom Shop</span>
+<span class="bg-primary-container text-on-primary-container px-3 py-1 text-[10px] uppercase tracking-widest font-bold rounded-full">In Stock</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-white">Midnight Noir <br/>Masterbuilt '24</h1>
+<p class="font-body-lg text-body-lg text-gray-400">Exclusive limited edition electric guitar featuring custom hand-wound pickups and a unique roasted maple neck.</p>
+</div>
+<div class="space-y-2">
+<span class="text-label-sm font-label-sm text-gray-500 uppercase tracking-widest">Price</span>
+<div class="flex items-baseline gap-4">
+<span class="text-4xl font-bold text-[#00F0FF] tracking-tighter">$4,299.00</span>
+<span class="text-lg text-gray-500 line-through font-medium">$4,850.00</span>
+</div>
+<p class="text-xs text-gray-400 italic">Financing available starting at $180/mo.</p>
+</div>
+<!-- Technical Specs (Utilitarian Grid) -->
+<div class="border border-[#333333] bg-[#1A1A1A]">
+<div class="grid grid-cols-2 divide-x divide-y divide-[#333333]">
+<div class="p-4 space-y-1">
+<span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Body</span>
+<p class="text-sm text-white font-medium">Select Alder</p>
+</div>
+<div class="p-4 space-y-1">
+<span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Neck</span>
+<p class="text-sm text-white font-medium">Roasted Maple</p>
+</div>
+<div class="p-4 space-y-1">
+<span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Pickups</span>
+<p class="text-sm text-white font-medium">CS Hand-Wound '60s</p>
+</div>
+<div class="p-4 space-y-1">
+<span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Finish</span>
+<p class="text-sm text-white font-medium">Nitrocellulose Lacquer</p>
+</div>
+</div>
+</div>
+<!-- CTA Buttons -->
+<div class="flex flex-col gap-4 pt-4">
+<button class="w-full bg-primary-container text-black font-bold py-5 text-sm uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all">
+                        Add to Cart
+                    </button>
+<button class="w-full bg-transparent border border-[#333333] text-white font-bold py-5 text-sm uppercase tracking-widest hover:border-white active:opacity-80 transition-all">
+                        Buy Now
+                    </button>
+</div>
+<div class="flex items-center gap-8 pt-4 border-t border-[#333333]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#00F0FF] text-xl" data-icon="local_shipping">local_shipping</span>
+<span class="text-xs text-gray-400 font-medium">Free Global Shipping</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#00F0FF] text-xl" data-icon="verified">verified</span>
+<span class="text-xs text-gray-400 font-medium">2-Year Warranty</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Related Products Section -->
+<section class="mt-32">
+<div class="flex items-end justify-between mb-12">
+<div class="space-y-2">
+<span class="text-[#00F0FF] text-[12px] font-bold uppercase tracking-[0.3em]">Next Level Gear</span>
+<h2 class="font-headline-lg text-headline-lg text-white">Recommended for You</h2>
+</div>
+<a class="text-label-md font-label-md text-gray-400 hover:text-white transition-colors flex items-center gap-2" href="#">
+                    View Catalog <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Related Card 1 -->
+<div class="group bg-[#1A1A1A] border border-[#333333] transition-all hover:border-[#444444]">
+<div class="aspect-square bg-black overflow-hidden">
+<img alt="Related Guitar 1" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="Sleek white modern electric guitar with black hardware, isolated on a dark minimalist background, clean lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDALRTY8jPXOqD-XPW52bExSDGvlvKt6TRTvKqsruDrCObUWPzEWG16vm2I4xhVUpFkTvrB54IcLB5Wrp8NbUXVWuaHDxCTexhydpAYN1tssGRdSRcaIS7Ijjg4WEpT08BXBt2gajI0xABUzG8VGOajE6N9oRbDbVu6RltExEtkADvhKEm5IZXBab9j3ZsqeYP1SVXiNmbzw1KG1q-wCDLemizqmHN5UJmatj3HD0GQa5Rm9YFW8BvRg4FswAAJAqA1cCyk3z0y6gI"/>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Standard Series</p>
+<h3 class="text-white font-bold text-lg group-hover:text-[#00F0FF] transition-colors">Polaris White S-Type</h3>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-white font-bold">$1,899</span>
+<button class="material-symbols-outlined text-gray-500 hover:text-white" data-icon="add_shopping_cart">add_shopping_cart</button>
+</div>
+</div>
+</div>
+<!-- Related Card 2 -->
+<div class="group bg-[#1A1A1A] border border-[#333333] transition-all hover:border-[#444444]">
+<div class="aspect-square bg-black overflow-hidden">
+<img alt="Related Guitar 2" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="Close-up of a sunburst finish vintage-style electric guitar with chrome hardware, warm wood tones against dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2uECUDxs0Rp1yJtZAHQ-jx4ESmGI2cAFv2IWmPFFagBEH36plK1pXuCIxTcufhFWdDMN3jrstybVNV5gq7WCa455Ltaf3Df_mAjP0yxHfGahywk4Z4pAiPzG2lL_zhEYS6_xHmEwKIzih5foUog6g6WNEFCpVUV5howojLEQ0LNAIoLOJa3V0we3I49-8QnIu-BKHcuE0JskgS91OMpVW247PYTTxI6SQLocl9s-IEtpqfGst4M8vGTKuWuIatbpDNDRTna9bfKc"/>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Vintage Reissue</p>
+<h3 class="text-white font-bold text-lg group-hover:text-[#00F0FF] transition-colors">'59 Heritage Burst</h3>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-white font-bold">$2,450</span>
+<button class="material-symbols-outlined text-gray-500 hover:text-white" data-icon="add_shopping_cart">add_shopping_cart</button>
+</div>
+</div>
+</div>
+<!-- Related Card 3 -->
+<div class="group bg-[#1A1A1A] border border-[#333333] transition-all hover:border-[#444444]">
+<div class="aspect-square bg-black overflow-hidden">
+<img alt="Related Guitar 3" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="Professional studio monitor headphones and audio interface, high-tech industrial design, cool blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNNZYSs83mAbEUqTuApW23sz4Rq9VXrjpW_wuDjOjYDb1bf_kaxPxYcsxHLopDpCi_0M4rxAS8jaH6D3YxFPNlB-GwYwOElT6SyqmFcW6oSvph_Ly3Uzxa-xvENQtkgzdcnnXIr9pe8BJoOoIC6PHWR_TmfiQSggYwiv3pZYOFla2V71nVO0_ksTGfu1GNTAztvb_cb-Mo7r-NTuWyPSKGl2db50Mz1uIMWjZguDjEIGqZcm5SFED27A7aASVzAnUjAWAZKLWCn6Y"/>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Studio Pack</p>
+<h3 class="text-white font-bold text-lg group-hover:text-[#00F0FF] transition-colors">Digital Studio Bundle</h3>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-white font-bold">$899</span>
+<button class="material-symbols-outlined text-gray-500 hover:text-white" data-icon="add_shopping_cart">add_shopping_cart</button>
+</div>
+</div>
+</div>
+<!-- Related Card 4 -->
+<div class="group bg-[#1A1A1A] border border-[#333333] transition-all hover:border-[#444444]">
+<div class="aspect-square bg-black overflow-hidden">
+<img alt="Related Guitar 4" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="Boutique tube amplifier head with glowing vacuum tubes and vintage leather handle, dark industrial aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACELzUPH0_ot3oO1ZQE5dPHXU1s7ueBopqoCfRT3NaRhVyLmTtZd655wrDqx1kdAsdLZzGVXkGP-noIUVmHQEVa74gaQuX3JpeP-4MYJCK4dWjb6EvmlQmJFZp1o-b4PbBZ1GQLaeBSBIj4m366nofD5HLZRcwNtyPBdt194WITUFp_XqbhKU6B0R4KPJcPpezw9dLxVdPZr9mWtOHNgSNkYvOzxoMSe7t80QVFAn9w2YyF8858cGVxGCVa_8LL_1aU45sNUj9mrY"/>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Boutique Amps</p>
+<h3 class="text-white font-bold text-lg group-hover:text-[#00F0FF] transition-colors">Voltaic 50W Tube Head</h3>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-white font-bold">$2,100</span>
+<button class="material-symbols-outlined text-gray-500 hover:text-white" data-icon="add_shopping_cart">add_shopping_cart</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-black border-t border-[#333333] mt-32">
+<div class="flex flex-col md:flex-row justify-between items-center px-20 py-12 w-full max-w-[1280px] mx-auto">
+<div class="mb-8 md:mb-0">
+<span class="text-lg font-black text-white">MusicStore</span>
+<p class="font-['Plus_Jakarta_Sans'] text-xs uppercase tracking-widest text-gray-500 mt-2">© 2024 MusicStore. Precision Audio Gear.</p>
+</div>
+<div class="flex gap-8">
+<a class="font-['Plus_Jakarta_Sans'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00F0FF] transition-opacity" href="#">Privacy</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00F0FF] transition-opacity" href="#">Terms</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00F0FF] transition-opacity" href="#">Support</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs uppercase tracking-widest text-gray-500 hover:text-[#00F0FF] transition-opacity" href="#">Shipping</a>
+</div>
+</div>
+</footer>
+</body></html>

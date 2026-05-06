@@ -1,0 +1,20 @@
+.navbar-stitch {
+  width: 100%;
+}
+
+.nav-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.nav-account-copy {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.nav-search-pill:focus-within {
+  border-color: #ba203f;
+}
