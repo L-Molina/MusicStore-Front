@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Carrito from './Components/Carrito/Carrito'
 import Catalogo from './Components/Catalogo/Catalogo'
 import DetalleProducto from './Components/DetalleProducto/DetalleProducto'
+import Login from './Components/Login/Login'
 import Home from './Components/Home/Home'
 import Layout from './Components/Layout/Layout'
 
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="catalogo" element={<Catalogo />} />
           <Route path="producto/:id" element={<DetalleProducto />} />
           <Route path="carrito" element={<Carrito />} />
+          <Route path="login" element={<Login />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
