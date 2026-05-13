@@ -1,3 +1,10 @@
+import fenderPlayerIIStrat from '../assets/fender_strat.jpg'
+import bossBD2 from '../assets/boss_bd2.jpg'
+import marshallOrigin50 from '../assets/marshall_origin_50.jpg'
+import ernieBallStrap from '../assets/ernie_ball_strap.jpg'
+import fenderProReverb from '../assets/fender_pro_reverb.jpg'
+import ampegVT40 from '../assets/ampeg_vt_40.jpg'
+
 /**
  * Catálogo alineado a taxonomía de mocks Stitch (home / cat_logo v6).
  * HTML de referencia: design-mocks/stitch_musicstore_e_commerce_platform/
@@ -32,57 +39,57 @@ export const CATEGORY_FILTERS = [
 export const PRODUCTS = [
   {
     id: '1',
-    name: 'Dark Series Stratocaster',
+    name: 'Fender Player II Stratocaster',
     category: 'Guitarras',
-    price: 1499,
+    price: 879.99,
     badge: 'NUEVO',
     featured: true,
-    catalogSubtitle: 'Guitarra eléctrica — acabado mate',
+    catalogSubtitle: 'Guitarra eléctrica — Hecha en México',
     cartLine: 'Instrumentos / Guitarras Eléctricas',
     image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDG8yHR51avEx8aY2LRw4sbUMd3bkdbY-24o1f--h-j7R3hMSWeLv9-5fxSsGT-PM6GiJXkYMllR7Hd8R5STH4APy4oHYe9_MFi-yJyl2FTiz2EGb94dMG8qRDN0uLPd-nWtEhmxJq24upi1DfAo9Ep21vA5YZpdm8lWkMWVgQ1NW2pYJk0SA5jMyuo1djHRDDua17lkjIG_YDlCc8NmcJxrPM7LB9kwSiuFjGvnIMOLTJXPlYdcOREUAB8JEGVXVHpyYwm_X4wyks',
+      fenderPlayerIIStrat,
     description:
-      'Strat moderno con electrónica Noiseless y acabado negro satinado tipo mock Home Novedades Stitch.',
+      'Strat moderna con pickups Single Coil. Hecha en México.',
   },
   {
     id: '2',
-    name: 'Overdrive Precision V3',
+    name: 'Boss BD-2 Blues Driver',
     category: 'Efectos',
-    price: 249,
+    price: 149.99,
     featured: true,
-    catalogSubtitle: 'Pedal boutique — tres bandas EQ',
+    catalogSubtitle: 'Pedal de Overdrive — Hecho en Japón',
     cartLine: 'Efectos / Drive',
     image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBfhLOu98mpsrekQOzCMgrZZ_q72CXHx2MCqXNNpZZFQjK8TczstalSATIGW1ULneKC-OzSFKfCd5k21i9khR2M0Qvnrg-3GnstCgSVwtoiAvqgnz34Shp3z2bo3mCu_jbW9F7RMd6ws0TeS0iFE66_M0s4-YtL-P6GfOpFZyVuUIWYZ5Vg-r6mPXkMBbGsBzZKLKTCqn10oFgCF9tEr6CZxsDIjgacNMFkrbby3hvzMlt4C2LK7TRFht5g5Q3yVtdZF5DTV1IH2qg',
+    bossBD2,
     description:
-      'Pedal de distorsión clase A con clipping asimétrico y LEDs de nivel como en mock Novedades.',
+      'Pedal de Overdrive con clipping y LEDs de alta gama. Hecho en Japón.',
   },
   {
     id: '3',
-    name: 'Custom Shop Head 50W',
+    name: 'Marshall Origin 50W',
     category: 'Amplificadores',
-    price: 2199,
+    price: 799.99,
     badge: 'Pro',
     featured: true,
-    catalogSubtitle: 'Cabezal a válvulas — canal dual',
+    catalogSubtitle: 'Cabezal a válvulas — Hecho en Reino Unido',
     cartLine: 'Amplificación / Cabezales',
     image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAwxMRpFmEIXBColqJymzdNAJzJzAfb8cal24lA5G7SleCUmmFoUVYvJG-HG6f2G3Lvgvyp9E-MmL8B3bdoOHHfCUVz1EKZejrURs3KED-3ar5FBDMJbKU4RtlbqPVps1twQmwBNbDB0z3hUqME9xMlQCUChszvRJ9302XIrQ5XYZVTHQ8RFrhsIMeIuxADIKwDiMbNClimRpbkdhIPDE31LfzN678XnWX2kzUGPOjiRXHmPj1iJRuqEXucd1Jogno2i35frip6OhY',
+      marshallOrigin50,
     description:
-      'Dos canales independientes con loop de efectos y salida DI emulada inspirado en tarjeta Novedades.',
+      'Amplificador digital con dos canales independientes. Hecho en Reino Unido.',
   },
   {
     id: '4',
-    name: 'Correa Artisan Cuero Pro',
+    name: 'Ernie Ball Strap',
     category: 'Accesorios',
-    price: 89,
+    price: 29.99,
     featured: true,
-    catalogSubtitle: 'Cuero perforado — hebillas níquel',
+    catalogSubtitle: 'Correa de cuero — Hecha en Estados Unidos',
     cartLine: 'Accesorios / Correas',
     image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC8Ki9P45dD3i5ugb242G4vLb5SlDU2_6893t88AvWY8KaOqQfOJy0rTbkSxC3TnECxeF4UzD57mz7HaDFyUncrUPtae-ZIpMkAXc4hOq1Ki1NUa9-o6bm6OM9U7uXVbR3VCLzgz_hvSmknoneWMPtToI4Y_1X1KaLEEXiNzrQtySscWT2Uj2q5GzQ9Tp8GeNvW6NzPhQgxri9ulrX-RpN1Y6bcpcBqBcHwqypDeURhcVuUpwZIEGps4FL5E_sSlIq-LPxn9oTqJWNM',
+      ernieBallStrap,
     description:
-      'Correa de cuero grueso para giras prolongadas como en showcase Stitch.',
+      'Correa de cuero para guitarra. Hecha en Estados Unidos.',
   },
   {
     id: '5',
@@ -99,15 +106,15 @@ export const PRODUCTS = [
   },
   {
     id: '6',
-    name: 'JVM410H 100W Tube Head',
+    name: 'Fender Pro Reverb 1966',
     category: 'Amplificadores',
-    price: 2150,
-    catalogSubtitle: 'El estándar del rock británico',
+    price: 2299.99,
+    catalogSubtitle: 'Amplificador a válvulas — Hecho en USA',
     cartLine: 'Amplificación / Cabezales',
     image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCeyBLshooRHhW9zGv6EuBi6vv3UmX6B7_pMgHk6Mau_9rWmqcKE-xDrbp-0gRa10-B6X7bh_5N92l7ulq8h_hhK0xnm8TRgTYeuzJBHwgLlIEJ8BDxFEKWdDxQ6SDi79RrAIOkIe0rZ15n0dIQNgqb4RRPLJ6PD6nt9WJylfWMykNtq2Urrqk0FP2u_MRNzBMhhBKii0_8c_CtGhOka6Dy7_neGpuFtxfs5k6r79JhYbwhhZ0xbsJArXQ_9paHKWWPSy1-u0RQ4oI',
+      fenderProReverb,
     description:
-      'Cabezal a válvulas cuatro canales con reverb paralelo desde mock cat_logo.',
+      'Amplificador a válvulas Vintage. Hecho en USA.',
   },
   {
     id: '7',
@@ -171,33 +178,16 @@ export const PRODUCTS = [
   },
   {
     id: '13',
-    name: 'TubeMaster Pro 100W MKII',
+    name: 'Ampeg VT-40',
     category: 'Amplificadores',
-    price: 2499,
-    badge: 'Edición Limitada',
-    sellerLine: 'MasterAudio Store',
-    catalogSubtitle: 'Cabezal válvulas • MKII revisión',
-    cartLine: 'Amplificación / Cabezales',
-    galleryExtras: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCMxxF9dcdXCq8On5tHVhL9ZiZow-x83T30OYNh1RTBFh3shyxp3UccLwP1DIlrq3p3DPv6XFEkK9EN2LOh803TBhnN22YEwiXQ5osrpssbsp8HmQsf2kOiBiZVKRKMEiKsyCmH9hZhHh-eEBLVnJczHPy3El_aqhw-Q2wSmpZK80gFNEThkb3c9USP_Jn2WxslSYmRrJMuYpD6da_YeM6EWC92LReVlQaGy54BIJgXSAkMcVGbucDlnB_nUrylgrBBYXP040ge2JM',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCW1z-DFM8ydvRtoGzzoxWRGiAGdu133PKfiikjAdsEV8khiZoGhwLZweeqIZVfHJCE822bcHXGS-4NPj6ZUzR64QEQovWVZI2AEFpM8dmT0hp9CGPGPclUaJrnAy2wQDlu6ovv83P-4vLQDAZtF1jiyNk9GL5hhQy8pHlJZ5FKC6yRTO3m3rL3VjB_o4cnYqxj-EocTDa7vjh8KYuVrD-9lKj7UQNKanl-Fb9rieiImb8amFj1nOzasdwXrFUMe7ZW1IbPyCzO4Yc',
-    ],
-    specs: {
-      Potencia: '100W (Conmutable a 50W)',
-      Válvulas: '4x ECC83, 4x EL34',
-      Entradas: '2 x Jack 1/4" (High/Low)',
-      Salidas: 'DI Out (XLR), Emulated',
-      Canales:
-        'Clean, Crunch, Lead 1, Lead 2 (Independientes)',
-    },
-    descriptionLong: [
-      'El TubeMaster Pro 100W MKII representa el pináculo de la ingeniería valvular moderna. Diseñado para el músico de gira que no acepta compromisos en su tono, este amplificador ofrece una respuesta dinámica sin precedentes y una claridad armónica que corta cualquier mezcla.',
-      'Desde limpios cristalinos tipo California hasta la saturación británica más agresiva, sus cuatro canales han sido ajustados meticulosamente para proporcionar una paleta sonora completa.',
-    ],
+    price: 2499.99,
+    catalogSubtitle: 'Amplificador a válvulas — Hecho en USA',
+    cartLine: 'Amplificadores',
+    featured: true,
     image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDB25Rizvfqc70z8mvs9Ex-mYz7c2-dHhFTGN2yf6XOF_8AE9g9V-ZmpyTuLQ-2DxvJhLjLfj4YasSe5K9os4tmX4mednn8UedEbrPAjekK7KVvBOOgKwPXLnqBr2j8nJowYnh9Zd1AFQSRgmbki1aZSemeT8P9_5orZziMUyYvTuDNbfBdubiczj3IJR_iNR_FgAuyEzJDIKaspyerKqeMe0sO8eu4W6LZX76OJn1J0ZvhO1rFlZdtZCuWWGWo_kshg65fTQ9HUVs',
+      ampegVT40,
     description:
-      'Cabezal a válvulas de referencia Stitch detalle_de_producto_musicstore_v6.',
+      'Amplificador a válvulas Vintage. Hecho en USA.',
   },
 ]
 
