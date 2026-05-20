@@ -22,7 +22,7 @@ export default function TarjetaProducto({ product, compactCartIcon }) {
         <img
           src={product.image}
           alt={product.name}
-          className="size-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
+          className="size-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-110"
         />
       </Link>
       <h3 className="mb-1 font-sans text-sm font-semibold text-white md:text-base">

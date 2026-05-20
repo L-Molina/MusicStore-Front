@@ -55,7 +55,7 @@ export default function NavBar() {
             <MaterialSymbol>shopping_cart</MaterialSymbol>
             {count > 0 && (
               <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-[#ba203f] text-[10px] font-bold text-white">
-                {count > 99 ? "99+" : count}
+                {count > 10 ? "10+" : count}
               </span>
             )}
           </Link>
@@ -66,7 +66,7 @@ export default function NavBar() {
           >
             <button
               type="button"
-              className="group flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
+              className="nav-icon-btn group flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
             >
               <span className="nav-account-copy hidden text-right uppercase leading-tight lg:block">
                 ACCEDE A TU CUENTA

@@ -8,12 +8,6 @@ Aplicación frontend del sistema MusicStore. Este proyecto proporciona la interf
 - [Tecnologías](#tecnologías)
 - [Funcionalidades](#funcionalidades)
 - [Instalación](#instalación)
-- [Variables de Entorno](#variables-de-entorno)
-- [Scripts Disponibles](#scripts-disponibles)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Integración con API](#integración-con-api)
-- [Contribuciones](#contribuciones)
-- [Licencia](#licencia)
 
 ---
 

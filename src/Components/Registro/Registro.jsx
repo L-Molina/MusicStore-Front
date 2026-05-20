@@ -2,14 +2,20 @@ import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import "./Login.css";
+import "./registro.css";
 
-export default function Login() {
+export default function registro() {
   const emailId = useId();
+  const userId = useId();
+  const nombreId = useId();
+  const apellidoId = useId();
   const passId = useId();
   const remId = useId();
 
   const [email, setEmail] = useState("");
+  const [user, setUser] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -51,10 +57,10 @@ export default function Login() {
 
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className="login-bg flex flex-col items-center justify-center px-6 py-16 relative">
-      <div className="login-noise" aria-hidden="true" />
+    <div className="registro-bg flex flex-col items-center justify-center px-6 py-16 relative">
+      <div className="registro-noise" aria-hidden="true" />
 
-      <main className="relative z-10 w-full max-w-[420px] login-fade-in">
+      <main className="relative z-10 w-full max-w-[420px] registro-fade-in">
         {/* ── Marca ─────────────────────────────────────────────── */}
         <header className="flex flex-col items-center mb-10">
           <Link to="/" aria-label="Volver al inicio">
@@ -71,7 +77,7 @@ export default function Login() {
 
         {/* ── Tarjeta ───────────────────────────────────────────── */}
         <section
-          className="login-card rounded-lg p-8"
+          className="registro-card rounded-lg p-8"
           key={shakeKey}
           style={shakeKey > 0 ? { animation: "shake 0.4s ease" } : undefined}
         >
@@ -89,6 +95,80 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            {/* Nombre y Apellido */}
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor={nombreId}
+                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+              >
+                Nombre y Apellido
+              </label>
+              <div className="registro-input-wrapper relative">
+                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
+                  badge
+                </MaterialSymbol>
+                <input
+                  id={nombreId}
+                  type="nombre"
+                  autoComplete="nombre"
+                  value={nombre}
+                  onChange={(e) => {
+                    setNombre(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Nombre"
+                  className="registro-input"
+                  disabled={loading}
+                />
+              </div>
+              <div className="registro-input-wrapper relative">
+                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
+                  badge
+                </MaterialSymbol>
+                <input
+                  id={apellidoId}
+                  type="apellido"
+                  autoComplete="apellido"
+                  value={apellido}
+                  onChange={(e) => {
+                    setApellido(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Apellido"
+                  className="registro-input"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Usuario */}
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor={userId}
+                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+              >
+                Nombre de Usuario
+              </label>
+              <div className="registro-input-wrapper relative">
+                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
+                  person
+                </MaterialSymbol>
+                <input
+                  id={userId}
+                  type="user"
+                  autoComplete="user"
+                  value={user}
+                  onChange={(e) => {
+                    setUser(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Usuario"
+                  className="registro-input"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
             {/* Email */}
             <div className="flex flex-col gap-1.5">
               <label
@@ -97,8 +177,8 @@ export default function Login() {
               >
                 Correo electrónico
               </label>
-              <div className="login-input-wrapper relative">
-                <MaterialSymbol className="login-input-icon material-symbols-outlined">
+              <div className="registro-input-wrapper relative">
+                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
                   mail
                 </MaterialSymbol>
                 <input
@@ -111,7 +191,7 @@ export default function Login() {
                     setError("");
                   }}
                   placeholder="nombre@ejemplo.com"
-                  className="login-input"
+                  className="registro-input"
                   disabled={loading}
                 />
               </div>
@@ -126,12 +206,9 @@ export default function Login() {
                 >
                   Contraseña
                 </label>
-                <a href="#" className="login-forgot">
-                  ¿Olvidaste tu contraseña?
-                </a>
               </div>
-              <div className="login-input-wrapper relative">
-                <MaterialSymbol className="login-input-icon material-symbols-outlined">
+              <div className="registro-input-wrapper relative">
+                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
                   lock
                 </MaterialSymbol>
                 <input
@@ -144,7 +221,7 @@ export default function Login() {
                     setError("");
                   }}
                   placeholder="••••••••"
-                  className="login-input"
+                  className="registro-input"
                   style={{ paddingRight: "44px" }}
                   disabled={loading}
                 />
@@ -171,7 +248,7 @@ export default function Login() {
               <input
                 id={remId}
                 type="checkbox"
-                className="login-checkbox"
+                className="registro-checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
                 disabled={loading}
@@ -184,7 +261,7 @@ export default function Login() {
             {/* Botón principal */}
             <button
               type="submit"
-              className="login-btn-primary mt-2 flex items-center justify-center gap-2"
+              className="registro-btn-primary mt-2 flex items-center justify-center gap-2"
               disabled={loading}
               aria-busy={loading}
             >
@@ -194,63 +271,19 @@ export default function Login() {
                     className="inline-block h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
                     aria-hidden="true"
                   />
-                  Iniciando…
+                  Registrando…
                 </>
               ) : (
-                "Iniciar sesión"
+                "Registrarse"
               )}
             </button>
           </form>
-
-          {/* Divisor */}
-          <div className="relative my-7">
-            <div className="login-divider-line" />
-            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#141616] px-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-600">
-              O continúa con
-            </span>
-          </div>
-
-          {/* Botones sociales */}
-          <div className="grid grid-cols-1 gap-3">
-            <button type="button" className="login-btn-social">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                aria-hidden="true"
-              >
-                <path
-                  fill="#4285F4"
-                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
-                />
-              </svg>
-              Google
-            </button>
-          </div>
         </section>
 
         {/* Pie */}
         <footer className="mt-8 text-center">
-          <p className="text-[13px] text-zinc-600">
-            ¿No tenés cuenta?{" "}
-            <Link to="/Registro">
-              <span className="registro-link">Registrate gratis</span>
-            </Link>
-          </p>
-          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-700">
-            Al iniciar sesión aceptás nuestros Términos de Servicio y Política
+          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-500">
+            Al crear y registrar tu cuenta aceptás nuestros Términos de Servicio y Política
             de Privacidad. MusicStore es una plataforma profesional de audio.
           </p>
         </footer>
@@ -258,7 +291,7 @@ export default function Login() {
 
       {/* Barra de estado decorativa */}
       <div
-        className="login-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-600"
+        className="registro-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-600"
         aria-hidden="true"
       >
         <span>System status: optimal</span>
