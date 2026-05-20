@@ -2,9 +2,12 @@ import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+import { useAuth } from "../../context/AuthContext";
 import "./registro.css";
 
 export default function registro() {
+  const { register } = useAuth();
+
   const emailId = useId();
   const userId = useId();
   const nombreId = useId();
@@ -25,34 +28,50 @@ export default function registro() {
 
   const navigate = useNavigate();
 
-  /* ── Validación básica del lado cliente ─────────────────────────── */
   function validate() {
+    if (!nombre.trim()) return "Ingresá tu nombre.";
+    if (!apellido.trim()) return "Ingresá tu apellido.";
+    if (!user.trim()) return "Ingresá un usuario.";
     if (!email.trim()) return "Ingresá tu correo electrónico.";
-    if (!/\S+@\S+\.\S+/.test(email))
-      return "El correo no tiene un formato válido.";
-    if (!password) return "Ingresá tu contraseña.";
+    if (!/\S+@\S+\.\S+/.test(email)) return "Correo inválido.";
+    if (!password) return "Ingresá una contraseña.";
     if (password.length < 6)
       return "La contraseña debe tener al menos 6 caracteres.";
     return "";
   }
 
-  /* ── Submit (mock de auth) ──────────────────────────────────────── */
   async function handleSubmit(e) {
     e.preventDefault();
+  
     const msg = validate();
+  
     if (msg) {
       setError(msg);
       setShakeKey((k) => k + 1);
       return;
     }
-    setError("");
+  
     setLoading(true);
-
-    // Simulamos latencia de red
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    // Mock: cualquier credencial válida redirige al home
-    navigate("/");
+  
+    try {
+      await register(
+        {
+          nombre,
+          apellido,
+          username: user,
+          email,
+          password,
+        },
+        remember
+      );
+  
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+      setShakeKey((k) => k + 1);
+    } finally {
+      setLoading(false);
+    }
   }
 
   /* ── Render ─────────────────────────────────────────────────────── */
@@ -99,7 +118,7 @@ export default function registro() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor={nombreId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
               >
                 Nombre y Apellido
               </label>
@@ -145,7 +164,7 @@ export default function registro() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor={userId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
               >
                 Nombre de Usuario
               </label>
@@ -173,7 +192,7 @@ export default function registro() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor={emailId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
               >
                 Correo electrónico
               </label>
@@ -202,7 +221,7 @@ export default function registro() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor={passId}
-                  className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+                  className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
                 >
                   Contraseña
                 </label>
@@ -231,7 +250,7 @@ export default function registro() {
                     showPass ? "Ocultar contraseña" : "Mostrar contraseña"
                   }
                   onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 transition-colors"
                 >
                   <MaterialSymbol className="text-[20px]">
                     {showPass ? "visibility_off" : "visibility"}
@@ -253,7 +272,7 @@ export default function registro() {
                 onChange={(e) => setRemember(e.target.checked)}
                 disabled={loading}
               />
-              <span className="text-[12px] font-medium text-zinc-500">
+              <span className="text-[12px] font-medium text-zinc-400">
                 Mantener sesión iniciada
               </span>
             </label>
@@ -282,16 +301,17 @@ export default function registro() {
 
         {/* Pie */}
         <footer className="mt-8 text-center">
-          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-500">
-            Al crear y registrar tu cuenta aceptás nuestros Términos de Servicio y Política
-            de Privacidad. MusicStore es una plataforma profesional de audio.
+          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-400">
+            Al crear y registrar tu cuenta aceptás nuestros Términos de Servicio
+            y Política de Privacidad. MusicStore es una plataforma profesional
+            de audio.
           </p>
         </footer>
       </main>
 
       {/* Barra de estado decorativa */}
       <div
-        className="registro-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-600"
+        className="registro-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-400"
         aria-hidden="true"
       >
         <span>System status: optimal</span>

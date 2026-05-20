@@ -2,9 +2,13 @@ import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+import { useAuth } from "../../context/AuthContext";
+
 import "./Login.css";
 
 export default function Login() {
+  const { login } = useAuth();
+
   const emailId = useId();
   const passId = useId();
   const remId = useId();
@@ -19,7 +23,6 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  /* ── Validación básica del lado cliente ─────────────────────────── */
   function validate() {
     if (!email.trim()) return "Ingresá tu correo electrónico.";
     if (!/\S+@\S+\.\S+/.test(email))
@@ -30,52 +33,52 @@ export default function Login() {
     return "";
   }
 
-  /* ── Submit (mock de auth) ──────────────────────────────────────── */
   async function handleSubmit(e) {
     e.preventDefault();
+
     const msg = validate();
+
     if (msg) {
       setError(msg);
       setShakeKey((k) => k + 1);
       return;
     }
-    setError("");
-    setLoading(true);
 
-    // Simulamos latencia de red
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    // Mock: cualquier credencial válida redirige al home
-    navigate("/");
+    try {
+      setLoading(true);
+
+      await login(email, password, remember);
+
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+      setShakeKey((k) => k + 1);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <div className="login-bg flex flex-col items-center justify-center px-6 py-16 relative">
       <div className="login-noise" aria-hidden="true" />
 
       <main className="relative z-10 w-full max-w-[420px] login-fade-in">
-        {/* ── Marca ─────────────────────────────────────────────── */}
         <header className="flex flex-col items-center mb-10">
-          <Link to="/" aria-label="Volver al inicio">
-            <img
-              src={BRAND_LOGO_URL}
-              alt="MusicStore"
-              className="h-20 w-auto object-contain mb-6"
-            />
-          </Link>
+          <img
+            src={BRAND_LOGO_URL}
+            alt="MusicStore"
+            className="h-20 w-auto object-contain mb-6"
+          />
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ba203f]">
-            Crea tu cuenta
+            Iniciar Sesión
           </p>
         </header>
-
-        {/* ── Tarjeta ───────────────────────────────────────────── */}
         <section
           className="login-card rounded-lg p-8"
           key={shakeKey}
           style={shakeKey > 0 ? { animation: "shake 0.4s ease" } : undefined}
         >
-          {/* Error banner */}
+          {" "}
           {error && (
             <div
               role="alert"
@@ -87,13 +90,11 @@ export default function Login() {
               <p className="text-[13px] text-[#e2e2e2]">{error}</p>
             </div>
           )}
-
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            {/* Email */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor={emailId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
               >
                 Correo electrónico
               </label>
@@ -116,13 +117,11 @@ export default function Login() {
                 />
               </div>
             </div>
-
-            {/* Contraseña */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor={passId}
-                  className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500"
+                  className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
                 >
                   Contraseña
                 </label>
@@ -163,7 +162,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Recordarme */}
             <label
               htmlFor={remId}
               className="flex items-center gap-2.5 cursor-pointer select-none"
@@ -176,12 +174,11 @@ export default function Login() {
                 onChange={(e) => setRemember(e.target.checked)}
                 disabled={loading}
               />
-              <span className="text-[12px] font-medium text-zinc-500">
+              <span className="text-[12px] font-medium text-zinc-400">
                 Mantener sesión iniciada
               </span>
             </label>
 
-            {/* Botón principal */}
             <button
               type="submit"
               className="login-btn-primary mt-2 flex items-center justify-center gap-2"
@@ -201,16 +198,12 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          {/* Divisor */}
           <div className="relative my-7">
             <div className="login-divider-line" />
-            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#141616] px-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-600">
+            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#141616] px-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-400">
               O continúa con
             </span>
           </div>
-
-          {/* Botones sociales */}
           <div className="grid grid-cols-1 gap-3">
             <button type="button" className="login-btn-social">
               <svg
@@ -241,24 +234,22 @@ export default function Login() {
           </div>
         </section>
 
-        {/* Pie */}
         <footer className="mt-8 text-center">
-          <p className="text-[13px] text-zinc-600">
+          <p className="text-[13px] text-zinc-400">
             ¿No tenés cuenta?{" "}
             <Link to="/Registro">
               <span className="registro-link">Registrate gratis</span>
             </Link>
           </p>
-          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-700">
+          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-500">
             Al iniciar sesión aceptás nuestros Términos de Servicio y Política
             de Privacidad. MusicStore es una plataforma profesional de audio.
           </p>
         </footer>
       </main>
 
-      {/* Barra de estado decorativa */}
       <div
-        className="login-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-600"
+        className="login-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-400"
         aria-hidden="true"
       >
         <span>System status: optimal</span>
