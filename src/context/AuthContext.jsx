@@ -18,15 +18,15 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, [token]);
 
-  async function login(email, password, remember = true) {
-    const response = await fetch("http://localhost:8080/api/auth/login", {
+  async function login(mail, contraseña, remember = true) {
+    const response = await fetch("http://localhost:8080/api/auth/autenticar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email,
-        password,
+        mail,
+        contraseña,
       }),
     });
 
