@@ -18,15 +18,15 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, [token]);
 
-  async function login(mail, contraseña, remember = true) {
+  async function login(email, password, remember = true) {
     const response = await fetch("http://localhost:8080/api/auth/autenticar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        mail,
-        contraseña,
+        email,
+        password,
       }),
     });
 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
   }
 
   async function register(userData, remember = true) {
-    const response = await fetch("http://localhost:8080/api/auth/register", {
+    const response = await fetch("http://localhost:8080/api/auth/registrar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -7,6 +7,7 @@ import "./registro.css";
 
 export default function registro() {
   const { register } = useAuth();
+  const [role, setRole] = useState("COMPRADOR");
 
   const emailId = useId();
   const userId = useId();
@@ -61,6 +62,7 @@ export default function registro() {
           username: user,
           email,
           password,
+          role
         },
         remember
       );
@@ -257,6 +259,22 @@ export default function registro() {
                   </MaterialSymbol>
                 </button>
               </div>
+            </div>
+            {/* Rol */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400">
+                Tipo de cuenta
+              </label>
+
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="registro-input"
+                disabled={loading}
+              >
+                <option value="COMPRADOR">Comprador</option>
+                <option value="VENDEDOR">Vendedor</option>
+              </select>
             </div>
 
             {/* Recordarme */}
