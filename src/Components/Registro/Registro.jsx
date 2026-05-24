@@ -36,8 +36,6 @@ export default function registro() {
     if (!email.trim()) return "Ingresá tu correo electrónico.";
     if (!/\S+@\S+\.\S+/.test(email)) return "Correo inválido.";
     if (!password) return "Ingresá una contraseña.";
-    if (password.length < 6)
-      return "La contraseña debe tener al menos 6 caracteres.";
     return "";
   }
 
@@ -55,7 +53,7 @@ export default function registro() {
     setLoading(true);
   
     try {
-      await register(
+      const data = await register(
         {
           nombre,
           apellido,
@@ -67,7 +65,11 @@ export default function registro() {
         remember
       );
   
-      navigate("/");
+      if (data.user.rol === "VENDEDOR") {
+        navigate("/vendedor");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setError(err.message);
       setShakeKey((k) => k + 1);

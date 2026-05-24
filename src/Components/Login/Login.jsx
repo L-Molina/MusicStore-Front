@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import "./Login.css";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login} = useAuth();
 
   const emailId = useId();
   const passId = useId();
@@ -28,8 +28,6 @@ export default function Login() {
     if (!/\S+@\S+\.\S+/.test(email))
       return "El correo no tiene un formato válido.";
     if (!password) return "Ingresá tu contraseña.";
-    if (password.length < 6)
-      return "La contraseña debe tener al menos 6 caracteres.";
     return "";
   }
 
@@ -47,9 +45,16 @@ export default function Login() {
     try {
       setLoading(true);
 
-      await login(email, password, remember);
+      const data = await login(email, password, remember);
 
-      navigate("/");
+      if (data.user.rol === "VENDEDOR") {
+        navigate("/vendedor");
+      }else if(data.user.rol === "ADMIN"){
+        navigate("/admin");
+      }else {
+        navigate("/");
+      }
+      
     } catch (err) {
       setError(err.message);
       setShakeKey((k) => k + 1);

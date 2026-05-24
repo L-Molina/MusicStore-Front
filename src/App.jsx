@@ -7,6 +7,8 @@ import Login from './Components/Login/Login'
 import Home from './Components/Home/Home'
 import Layout from './Components/Layout/Layout'
 import Registro from './Components/Registro/Registro'
+import VendedorPanel from "./Components/Vendedor/VendedorPanel";
+import AdminPanel from "./Components/Admin/AdminPanel";
 
 export default function App() {
   return (
@@ -15,6 +17,8 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="catalogo" element={<Catalogo />} />
+          <Route path="admin" element={<AdminPanel />} />
+          <Route path="vendedor" element={<VendedorPanel />} />
           <Route path="producto/:id" element={<DetalleProducto />} />
           <Route path="carrito" element={<Carrito />} />
           <Route path="checkout" element={<Checkout />} />
