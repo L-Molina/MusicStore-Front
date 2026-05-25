@@ -2,3 +2,11 @@
   border-bottom: 1px solid #ba203f;
   padding-bottom: 1rem;
 }
+
+.catalogo-shell input[type='checkbox'] {
+  accent-color: #ba203f;
+}
+
+.catalogo-shell input::placeholder {
+  color: #6b7280;
+}
