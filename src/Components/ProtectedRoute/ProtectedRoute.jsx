@@ -1,21 +1,24 @@
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom"
+import { useAuth } from "../../context/AuthContext"
 
-export default function ProtectedRoute({
-  children,
-  allowedRoles,
-}) {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
+export default function ProtectedRoute({ children, allowedRoles }) {
+  const { user, token, loading } = useAuth()
 
-  // 1. 🔒 No logueado
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black p-10 text-white">
+        Cargando...
+      </div>
+    )
+  }
+
   if (!user || !token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />
   }
 
-  // 2. 🚫 Sin permisos de rol (si se define restricción)
   if (allowedRoles && !allowedRoles.includes(user.rol)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" replace />
   }
 
-  return children;
+  return children
 }

@@ -10,16 +10,35 @@ import studioSpeakers from '../assets/studio_speakers.jpg'
 const fallbackImagesByName = {
   'vinilo soda stereo': studioConsole,
   'remera queen': guitarAmpBg,
+  'guitarra fender stratocaster': fenderStrat,
 }
 
 const fallbackImagesByCategory = {
   rock: guitarAmpBg,
   guitarras: fenderStrat,
+  guitarra: fenderStrat,
   amplificadores: marshallAmp,
+  amplificador: marshallAmp,
   efectos: bossBD2,
+  pedales: bossBD2,
   accesorios: ernieBallStrap,
   'audio pro': studioSpeakers,
+  audio: studioSpeakers,
   altavoces: studioSpeakers,
+}
+
+const normalizeText = (value) => {
+  if (!value) return ''
+
+  if (typeof value === 'string') {
+    return value.toLowerCase()
+  }
+
+  if (typeof value === 'object') {
+    return (value.nombre || value.name || '').toLowerCase()
+  }
+
+  return String(value).toLowerCase()
 }
 
 export const getProductImageUrl = (product) => {
@@ -29,8 +48,8 @@ export const getProductImageUrl = (product) => {
     return `data:image/jpeg;base64,${firstPhoto.file}`
   }
 
-  const productName = product?.name?.toLowerCase()
-  const productCategory = product?.category?.toLowerCase()
+  const productName = normalizeText(product?.name)
+  const productCategory = normalizeText(product?.category || product?.categoryName)
 
   if (productName && fallbackImagesByName[productName]) {
     return fallbackImagesByName[productName]

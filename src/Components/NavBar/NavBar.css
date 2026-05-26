@@ -2,6 +2,31 @@
   width: 100%;
 }
 
+.navbar-inner {
+  min-height: 96px;
+}
+
+.navbar-logo {
+  height: clamp(60px, 5.4vw, 90px);
+  width: auto;
+  max-width: 260px;
+}
+
+.navbar-link {
+  font-size: clamp(1.05rem, 1.15vw, 1.25rem);
+  letter-spacing: 0.11em;
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.navbar-link:hover {
+  transform: translateY(-1px);
+}
+
+.navbar-user {
+  font-size: clamp(1.05rem, 1.15vw, 1.25rem);
+  font-weight: 600;
+}
+
 .nav-icon-btn {
   background: transparent;
   border: none;
@@ -10,11 +35,52 @@
 }
 
 .nav-account-copy {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .nav-search-pill:focus-within {
   border-color: #ba203f;
+}
+
+.navbar-stitch .material-symbols-outlined {
+  font-size: 30px;
+}
+
+@media (max-width: 900px) {
+  .navbar-inner {
+    min-height: 82px;
+    padding-inline: 1.25rem;
+  }
+
+  .navbar-logo {
+    height: 58px;
+    max-width: 200px;
+  }
+
+  .navbar-link,
+  .navbar-user {
+    font-size: 1rem;
+  }
+
+  .navbar-stitch .material-symbols-outlined {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar-inner {
+    min-height: 74px;
+    padding-inline: 1rem;
+  }
+
+  .navbar-logo {
+    height: 48px;
+    max-width: 165px;
+  }
+
+  .navbar-stitch .material-symbols-outlined {
+    font-size: 26px;
+  }
 }

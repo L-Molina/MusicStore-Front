@@ -1,56 +1,55 @@
-import { Link } from "react-router-dom";
-import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
-import { useCart } from "../../hooks/useCart";
-import { useAuth } from "../../context/AuthContext";
-import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import "./NavBar.css";
+import { Link } from "react-router-dom"
+import logoText from "../../assets/logo-text.png"
+import { useAuth } from "../../context/AuthContext"
+import { useCart } from "../../hooks/useCart"
+import MaterialSymbol from "../MaterialSymbol/MaterialSymbol"
+import "./NavBar.css"
 
 export default function NavBar() {
-  const { count } = useCart();
-  const { isAuthenticated, user, logout } = useAuth();
-const isSeller = user?.rol === "VENDEDOR";
+  const { count } = useCart()
+  const { isAuthenticated, user, logout } = useAuth()
+
+  const canManageProducts = user?.rol === "VENDEDOR" || user?.rol === "ADMIN"
 
   return (
-    <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans text-sm font-medium tracking-wide text-[#ba203f]">
-      <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-8 py-4">
-
-        {/* IZQUIERDA */}
-        <div className="flex items-center gap-6">
-          
-
+    <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans font-medium tracking-wide text-[#ba203f]">
+      <div className="navbar-inner mx-auto flex w-full max-w-screen-2xl items-center justify-between px-8 py-4">
+        <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center">
             <img
               alt="MusicStore Logo"
-              className="h-20 w-auto object-contain"
-              src={BRAND_LOGO_URL}
-              width={160}
-              height={80}
+              className="navbar-logo object-contain"
+              src={logoText}
             />
           </Link>
 
           <Link
-  to="/catalogo"
-  className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
->
-  Catálogo
-</Link>
+            to="/catalogo"
+            className="navbar-link hidden font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
+          >
+            Catálogo
+          </Link>
 
-{isSeller && (
-  <Link
-    to="/vendedor"
-    className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
-  >
-    Panel vendedor
-  </Link>
-)}
+          {canManageProducts && (
+            <Link
+              to="/vendedor"
+              className="navbar-link hidden font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
+            >
+              Panel vendedor
+            </Link>
+          )}
         </div>
-        
 
-        {/* DERECHA */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-7">
+          {isAuthenticated && (
+            <Link
+              to="/perfil"
+              className="navbar-link hidden font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
+            >
+              Mi perfil
+            </Link>
+          )}
 
-          {/* CARRITO */}
-         
           <Link
             to="/carrito"
             className="relative flex items-center gap-2 text-[#ba203f] transition-colors hover:text-white"
@@ -63,16 +62,18 @@ const isSeller = user?.rol === "VENDEDOR";
               </span>
             )}
           </Link>
-        
 
-          {/* LOGIN / USER */}
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden text-white lg:block">
-                Hola, {user?.nombre}
-              </span>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/perfil"
+                className="navbar-user hidden text-white transition-colors hover:text-[#ba203f] lg:block"
+              >
+                Hola, {user?.nombre || user?.nombreUsuario}
+              </Link>
 
               <button
+                type="button"
                 onClick={logout}
                 className="flex items-center gap-2 text-[#ba203f] hover:text-white"
               >
@@ -82,17 +83,17 @@ const isSeller = user?.rol === "VENDEDOR";
           ) : (
             <Link
               to="/login"
-              className="flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
+              className="navbar-link flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
             >
-              <span className="hidden lg:block uppercase">
-                Iniciar sesión 
+              <span className="hidden uppercase lg:block">
+                Iniciar sesión
               </span>
+
               <MaterialSymbol>person</MaterialSymbol>
             </Link>
           )}
-
         </div>
       </div>
     </nav>
-  );
+  )
 }
