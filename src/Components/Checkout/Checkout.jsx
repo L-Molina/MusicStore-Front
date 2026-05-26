@@ -1,18 +1,20 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-
-import { RELATED_SUGGESTIONS } from "../../data/products.js";
 import { formatPriceEUR } from "../../utils/formatPrice.js";
 import { useCart } from "../../hooks/useCart.js";
-
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-
 import "./Checkout.css";
+import { useNavigate } from "react-router-dom";
 
 const SHIPPING = 25;
 
 export default function Carrito() {
-  const { items, total } = useCart();
+  
+const navigate = useNavigate();
+  const { items, total, clear } = useCart();
+  const user = JSON.parse(localStorage.getItem("user"))
+const usuarioId = user?.id
+const [loading, setLoading] = useState(false)
 
   const [selectedPayment, setSelectedPayment] = useState("");
 
@@ -47,7 +49,36 @@ export default function Carrito() {
       icon: "account_balance",
     },
   ];
+const handleCheckout = async () => {
+  try {
+    setLoading(true)
 
+    const token = localStorage.getItem("token")
+
+    const res = await fetch(
+      `http://localhost:8080/carrito/checkout/${usuarioId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (!res.ok) return
+
+    await res.json()
+
+    clear() // 👈 IMPORTANTE: vacía el carrito frontend
+navigate("/");
+    alert("Compra realizada con éxito 🎉")
+
+  } catch (err) {
+    console.error("Error checkout:", err)
+  } finally {
+    setLoading(false)
+  }
+}
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-8 pb-24 pt-32 font-sans">
       <div className="mb-12 flex flex-col gap-2">
@@ -182,47 +213,19 @@ export default function Carrito() {
 
             <div className="space-y-4">
               <button
-                type="button"
-                disabled={!selectedPayment}
-                className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Finalizar compra
-              </button>
+  type="button"
+  disabled={!selectedPayment || loading}
+  onClick={handleCheckout}
+  className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {loading ? "Procesando..." : "Finalizar compra"}
+</button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* SUGERENCIAS */}
-      <section className="mt-24">
-        <h2 className="mb-8 font-sans text-2xl font-bold uppercase tracking-widest text-[#e2e2e2]">
-          También te podría interesar
-        </h2>
-
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          {RELATED_SUGGESTIONS.map((s) => (
-            <div key={s.id} className="group cursor-pointer">
-              <Link to="/catalogo" className="block">
-                <div className="mb-4 aspect-square overflow-hidden rounded bg-zinc-900">
-                  <img
-                    alt={s.name}
-                    className="size-full object-cover grayscale transition-all duration-700 group-hover:scale-110 group-hover:grayscale-0"
-                    src={s.image}
-                  />
-                </div>
-
-                <p className="font-sans text-sm font-semibold text-[#e2e2e2]">
-                  {s.name}
-                </p>
-
-                <p className="font-sans font-bold text-[#ba203f]">
-                  {formatPriceEUR(s.price)}
-                </p>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
+      
     </main>
   );
 }

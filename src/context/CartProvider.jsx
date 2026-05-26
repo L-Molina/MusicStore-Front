@@ -1,54 +1,183 @@
-import { useCallback, useMemo, useState } from 'react'
-import { CartContext } from './cart-context.js'
+  import { useCallback, useEffect, useMemo, useState } from 'react'
+  import { CartContext } from './cart-context.js'
 
-export function CartProvider({ children }) {
-  const [items, setItems] = useState([])
+async function mapCartItems(carrito) {
+  const items = carrito?.items ?? []
 
-  const addItem = useCallback((product, qty = 1) => {
-    setItems((prev) => {
-      const i = prev.findIndex((x) => x.id === product.id)
-      if (i === -1) return [...prev, { ...product, quantity: qty }]
-      const next = [...prev]
-      next[i] = { ...next[i], quantity: next[i].quantity + qty }
-      return next
+  return Promise.all(
+    items.map(async (item) => {
+      let fotos = []
+
+      if (item.producto.fotosIds?.length > 0) {
+        const res = await fetch(
+          `http://localhost:8080/fotos/${item.producto.fotosIds[0]}`
+        )
+
+        const data = await res.json()
+        fotos = [data]
+      }
+
+      return {
+        itemId: item.id,
+        id: item.producto.id,
+        name: item.producto.nombre,
+        description: item.producto.descripcion,
+        price: item.producto.precio,
+        discountedPrice: item.producto.precioConDescuento,
+        discount: item.producto.descuento,
+        stock: item.producto.stock,
+        category: item.producto.categoria?.nombre,
+        fotos,
+        quantity: item.cantidad,
+      }
     })
+  )
+}
+
+  export function CartProvider({ children }) {
+    const user = JSON.parse(localStorage.getItem('user'))
+const usuarioId = user?.id
+    const [items, setItems] = useState([])
+
+  const loadCart = useCallback(async () => {
+    
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(
+  `http://localhost:8080/carrito/usuario/${usuarioId}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+)
+
+      if (!res.ok) return
+
+      const carrito = await res.json()
+
+      const mapped = await mapCartItems(carrito)
+setItems(mapped)
+    } catch (err) {
+      console.error('Error cargando carrito:', err)
+    }
   }, [])
 
-  const removeItem = useCallback((id) => {
-    setItems((prev) => prev.filter((x) => x.id !== id))
+  const addItem = useCallback(async (product, qty = 1) => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('http://localhost:8080/carrito/agregar', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({
+    usuarioId,
+    productoId: product.id,
+    cantidad: qty,
+  }),
+})
+
+      if (!res.ok) return
+
+      const carrito = await res.json()
+
+      const mapped = await mapCartItems(carrito)
+setItems(mapped)
+    } catch (err) {
+      console.error('Error agregando producto:', err)
+    }
   }, [])
 
-  const setQuantity = useCallback((id, quantity) => {
-    setItems((prev) => {
-      if (quantity < 1) return prev.filter((x) => x.id !== id)
-      return prev.map((x) => (x.id === id ? { ...x, quantity } : x))
-    })
+  const removeItem = useCallback(async (itemId) => {
+    try {
+      const token = localStorage.getItem('token')
+      await fetch(
+        `http://localhost:8080/carrito/item/${itemId}`,
+        {
+          method: 'DELETE',
+          headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  }
+        }
+      )
+
+      setItems((prev) =>
+        prev.filter((x) => x.itemId !== itemId)
+      )
+    } catch (err) {
+      console.error('Error eliminando item:', err)
+    }
   }, [])
 
-  const clear = useCallback(() => setItems([]), [])
+  const setQuantity = useCallback(async (itemId, quantity) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (quantity < 1) {
+        removeItem(itemId)
+        return
+      }
+
+      const res = await fetch(
+        `http://localhost:8080/carrito/item/${itemId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            cantidad: quantity,
+          }),
+        }
+      )
+
+      if (!res.ok) return
+
+      const carrito = await res.json()
+
+      const mapped = await mapCartItems(carrito)
+setItems(mapped)
+    } catch (err) {
+      console.error('Error actualizando cantidad:', err)
+    }
+  }, [removeItem])
+
+    const clear = useCallback(() => setItems([]), [])
 
   const total = useMemo(
-    () => items.reduce((s, x) => s + x.price * x.quantity, 0),
+    () =>
+      items.reduce(
+        (s, x) =>
+          s +
+          (x.discount > 0 ? x.discountedPrice : x.price) * x.quantity,
+        0
+      ),
     [items],
   )
 
-  const count = useMemo(
-    () => items.reduce((s, x) => s + x.quantity, 0),
-    [items],
-  )
+    const count = useMemo(
+      () => items.reduce((s, x) => s + x.quantity, 0),
+      [items],
+    )
 
-  const value = useMemo(
-    () => ({
-      items,
-      addItem,
-      removeItem,
-      setQuantity,
-      clear,
-      total,
-      count,
-    }),
-    [items, addItem, removeItem, setQuantity, clear, total, count],
-  )
+    const value = useMemo(
+      () => ({
+        items,
+        addItem,
+        removeItem,
+        setQuantity,
+        clear,
+        total,
+        count,
+      }),
+      [items, addItem, removeItem, setQuantity, clear, total, count],
+    )
+  useEffect(() => {
+    loadCart()
+  }, [loadCart])
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
-}
+    return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+  }

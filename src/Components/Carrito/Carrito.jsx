@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
-import { RELATED_SUGGESTIONS } from "../../data/products.js";
-import { formatPriceEUR } from "../../utils/formatPrice.js";
 import { useCart } from "../../hooks/useCart.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-
+import { getProductImageUrl } from "../../utils/images"
 const SHIPPING = 25;
 
 export default function Carrito() {
@@ -57,7 +55,7 @@ export default function Carrito() {
               <div className="h-40 w-full shrink-0 overflow-hidden rounded bg-zinc-900 md:w-40">
                 <Link to={`/producto/${item.id}`}>
                   <img
-                    src={item.image}
+                    src={getProductImageUrl(item)}
                     alt={item.name}
                     className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
@@ -73,40 +71,73 @@ export default function Carrito() {
                       {item.name}
                     </Link>
                     <p className="mt-1 text-sm uppercase tracking-widest text-zinc-500">
-                      {item.cartLine ?? item.category}
+                      {item.cartLine ?? item.category?.nombre}
                     </p>
                   </div>
                   <button
                     type="button"
                     aria-label={`Eliminar ${item.name}`}
                     className="text-zinc-600 hover:text-[#ba203f]"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.itemId)}
                   >
                     <MaterialSymbol>delete</MaterialSymbol>
                   </button>
                 </div>
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center rounded border border-zinc-800">
-                    <button
-                      type="button"
-                      className="border-r border-zinc-800 px-3 py-1 text-zinc-400 hover:bg-zinc-800"
-                      onClick={() => setQuantity(item.id, item.quantity - 1)}
-                    >
-                      −
-                    </button>
-                    <span className="border-r border-zinc-800 px-4 py-1 font-bold text-[#e2e2e2]">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      className="px-3 py-1 text-zinc-400 hover:bg-zinc-800"
-                      onClick={() => addItem(item, 1)}
-                    >
-                      +
-                    </button>
-                  </div>
+  <button
+  type="button"
+  className="border-r border-zinc-800 px-3 py-1 text-zinc-400 hover:bg-zinc-800"
+  onClick={() => setQuantity(item.itemId, item.quantity - 1)}
+>
+  −
+</button>
+
+  <input
+    type="text"
+    value={item.quantity}
+    className="w-14 border-r border-zinc-800 bg-transparent text-center font-bold text-[#e2e2e2] outline-none"
+    onChange={(e) => {
+      const value = e.target.value
+
+      if (value === "") {
+        setQuantity(item.itemId, 1)
+        return
+      }
+
+      if (!/^\d+$/.test(value)) return
+
+      const cantidad = Math.max(
+        1,
+        Math.min(Number(value), item.stock)
+      )
+
+      setQuantity(item.itemId, cantidad)
+    }}
+  />
+
+  <button
+    type="button"
+    disabled={item.quantity >= item.stock}
+    className={`px-3 py-1
+      ${
+        item.quantity >= item.stock
+          ? "cursor-not-allowed opacity-50 text-zinc-500"
+          : "text-zinc-400 hover:bg-zinc-800"
+      }`}
+    onClick={() =>
+      setQuantity(item.itemId, Math.min(item.quantity + 1, item.stock))
+    }
+  >
+    +
+  </button>
+</div>
                   <span className="font-sans text-2xl font-bold text-[#e2e2e2]">
-                    {formatPriceEUR(item.price * item.quantity)}
+                    $
+{(
+  (item.discount > 0 ? item.discountedPrice : item.price)
+  * item.quantity
+).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -125,7 +156,7 @@ export default function Carrito() {
                   Subtotal
                 </span>
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
-                  {formatPriceEUR(subtotalProductos)}
+                  ${subtotalProductos.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-zinc-400">
@@ -133,7 +164,7 @@ export default function Carrito() {
                   Envío (Asegurado)
                 </span>
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
-                  {formatPriceEUR(conEnvío)}
+                  ${conEnvío.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -142,7 +173,7 @@ export default function Carrito() {
                 Total
               </span>
               <span className="font-sans text-3xl font-bold text-[#ba203f] tabular-nums">
-                {formatPriceEUR(granTotal)}
+                ${granTotal.toFixed(2)}
               </span>
             </div>
             <div className="space-y-4">
@@ -161,49 +192,10 @@ export default function Carrito() {
                 Seguir comprando
               </Link>
             </div>
-            <div className="mt-8 border-t border-zinc-800 pt-8">
-              <div className="mb-4 flex items-center gap-3 text-zinc-500">
-                <MaterialSymbol className="text-sm">lock</MaterialSymbol>
-                <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Pago seguro encriptado
-                </span>
-              </div>
-              <div className="flex gap-4 opacity-50 grayscale transition-all hover:grayscale-0">
-                <MaterialSymbol>credit_card</MaterialSymbol>
-                <MaterialSymbol>account_balance</MaterialSymbol>
-                <MaterialSymbol>payments</MaterialSymbol>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      <section className="mt-24">
-        <h2 className="mb-8 font-sans text-2xl font-bold uppercase tracking-widest text-[#e2e2e2]">
-          También te podría interesar
-        </h2>
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          {RELATED_SUGGESTIONS.map((s) => (
-            <div key={s.id} className="group cursor-pointer">
-              <Link to="/catalogo" className="block">
-                <div className="mb-4 aspect-square overflow-hidden rounded bg-zinc-900">
-                  <img
-                    alt={s.name}
-                    className="size-full object-cover grayscale transition-all duration-700 group-hover:scale-110 group-hover:grayscale-0"
-                    src={s.image}
-                  />
-                </div>
-                <p className="font-sans text-sm font-semibold text-[#e2e2e2]">
-                  {s.name}
-                </p>
-                <p className="font-sans font-bold text-[#ba203f]">
-                  {formatPriceEUR(s.price)}
-                </p>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
     </main>
   );
 }

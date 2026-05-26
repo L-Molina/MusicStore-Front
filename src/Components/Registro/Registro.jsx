@@ -65,11 +65,9 @@ export default function registro() {
         remember
       );
   
-      if (data.user.rol === "VENDEDOR") {
-        navigate("/vendedor");
-      } else {
+      
         navigate("/");
-      }
+      
     } catch (err) {
       setError(err.message);
       setShakeKey((k) => k + 1);

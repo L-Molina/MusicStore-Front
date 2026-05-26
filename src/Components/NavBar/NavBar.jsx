@@ -8,9 +8,7 @@ import "./NavBar.css";
 export default function NavBar() {
   const { count } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
-  const isSellerOrAdmin =
-  user?.rol === "VENDEDOR" ||
-  user?.rol === "ADMIN";
+const isSeller = user?.rol === "VENDEDOR";
 
   return (
     <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans text-sm font-medium tracking-wide text-[#ba203f]">
@@ -18,13 +16,7 @@ export default function NavBar() {
 
         {/* IZQUIERDA */}
         <div className="flex items-center gap-6">
-          <button
-            type="button"
-            className="nav-icon-btn text-[#ba203f] hover:text-white"
-            aria-label="Abrir menú"
-          >
-            <MaterialSymbol>menu</MaterialSymbol>
-          </button>
+          
 
           <Link to="/" className="flex items-center">
             <img
@@ -36,21 +28,29 @@ export default function NavBar() {
             />
           </Link>
 
-          {!isSellerOrAdmin && (
           <Link
-            to="/catalogo"
-            className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] transition-colors hover:text-white lg:inline"
-          >
-            Catálogo
-          </Link>
-        )}
+  to="/catalogo"
+  className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
+>
+  Catálogo
+</Link>
+
+{isSeller && (
+  <Link
+    to="/vendedor"
+    className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
+  >
+    Panel vendedor
+  </Link>
+)}
         </div>
+        
 
         {/* DERECHA */}
         <div className="flex items-center gap-6">
 
           {/* CARRITO */}
-          {!isSellerOrAdmin && (
+         
           <Link
             to="/carrito"
             className="relative flex items-center gap-2 text-[#ba203f] transition-colors hover:text-white"
@@ -63,7 +63,7 @@ export default function NavBar() {
               </span>
             )}
           </Link>
-        )}
+        
 
           {/* LOGIN / USER */}
           {isAuthenticated ? (
@@ -85,7 +85,7 @@ export default function NavBar() {
               className="flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
             >
               <span className="hidden lg:block uppercase">
-                Accede a tu cuenta
+                Iniciar sesión 
               </span>
               <MaterialSymbol>person</MaterialSymbol>
             </Link>

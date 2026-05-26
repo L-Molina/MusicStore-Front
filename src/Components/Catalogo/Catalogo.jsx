@@ -1,42 +1,125 @@
-import { Link, useSearchParams } from 'react-router-dom'
-import { PRODUCTS, CATEGORY_FILTERS, getProductById } from '../../data/products.js'
-import { formatPriceEUR } from '../../utils/formatPrice.js'
+import {useSearchParams } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart.js'
 import TarjetaProducto from '../TarjetaProducto/TarjetaProducto'
 import './Catalogo.css'
+import { useState } from 'react'
+import { useEffect } from 'react'
 
-/**
- * Versión compacta del mock `cat_logo_musicstore_v6/code.html`:
- * filtros lateral + rejilla principal (omitimos demo player inferior).
- */
 export default function Catalogo() {
+  const [categories, setCategories] = useState([])
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [appliedRange, setAppliedRange] = useState({ min: '', max: '' })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [products, setProducts] = useState([])
+const [loading, setLoading] = useState(true)
+  const [onlyAvailable, setOnlyAvailable] = useState(false)
   const [params, setParams] = useSearchParams()
   const catParam = params.get('cat')
-  const activeCat =
-    catParam && CATEGORY_FILTERS.includes(catParam) ? catParam : 'Todos'
+  const activeCat = catParam ?? 'Todos'
   const { addItem } = useCart()
 
-  const flagship = getProductById('13')
 
-  const list = PRODUCTS.filter((p) => activeCat === 'Todos' || p.category === activeCat).filter((p) => {
-    /* evitar repetir destacado cuando es el mismo producto grande */
-    if (flagship && p.id === flagship.id && showFlagship(activeCat)) return false
-    return true
-  })
+  const list = products
+    .filter((p) => activeCat === 'Todos' || p.category === activeCat)
+    
+    .filter((p) => {
+      const name = (p.name || '').toLowerCase()
+      const description = (p.description || '').toLowerCase()
+      const term = searchTerm.toLowerCase()
 
-  function showFlagship(cat) {
-    return cat === 'Todos' || cat === 'Amplificadores'
+      return name.includes(term) || description.includes(term)
+    })
+    .filter((p) => {
+      if (!onlyAvailable) return true
+      return p.stock > 0
+    })
+    
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/categorias")
+      const data = await res.json()
+      setCategories(data)
+    } catch (err) {
+      console.error("Error trayendo categorías:", err)
+    }
   }
 
-  function pickCat(cat) {
-    const next = new URLSearchParams(params)
-    if (cat === 'Todos') next.delete('cat')
-    else next.set('cat', cat)
-    setParams(next, { replace: true })
+  fetchCategories()
+}, [])
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+
+      let url = "http://localhost:8080/productos"
+
+      const min = appliedRange.min !== '' ? appliedRange.min : null
+const max = appliedRange.max !== '' ? appliedRange.max : null
+
+      if (min !== null || max !== null) {
+        const params = new URLSearchParams()
+
+        if (min !== null) params.append("min", min)
+        if (max !== null) params.append("max", max)
+
+        url = `http://localhost:8080/productos/precio?${params.toString()}`
+      }
+
+      const res = await fetch(url)
+      const data = await res.json()
+
+      const formatted = await Promise.all(
+        data.map(async (p) => {
+          let fotos = []
+
+          if (p.fotosIds?.length > 0) {
+            const fotoRes = await fetch(
+              `http://localhost:8080/fotos/${p.fotosIds[0]}`
+            )
+
+            const fotoData = await fotoRes.json()
+            fotos = [fotoData]
+          }
+
+          return {
+            id: p.id,
+            name: p.nombre,
+            description: p.descripcion,
+            price: p.precio,
+            discountedPrice: p.precioConDescuento,
+            discount: p.descuento,
+            stock: p.stock,
+            category: p.categoria?.nombre ?? "Sin categoría",
+            categoryId: p.categoria?.id,
+            fotosIds: p.fotosIds,
+            fotos,
+          }
+        })
+      )
+
+      setProducts(formatted)
+
+    } catch (error) {
+      console.error("Error trayendo productos:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const filterItems = CATEGORY_FILTERS.filter((c) => c !== 'Todos')
+  fetchProducts()
+}, [appliedRange])
 
+function pickCat(cat) {
+  const next = new URLSearchParams(params)
+
+  if (cat === 'Todos') next.delete('cat')
+  else next.set('cat', cat)
+
+  setParams(next, { replace: true })
+}
+const filterItems = categories
   return (
     <div className="catalogo-shell mx-auto max-w-screen-2xl px-8 pb-24 pt-28 font-sans">
       <main className="flex flex-col gap-8 md:flex-row md:gap-10">
@@ -46,92 +129,97 @@ export default function Catalogo() {
               Categorías
             </h3>
             <ul className="space-y-3">
+              
               {filterItems.map((c) => (
-                <li key={c}>
-                  <button
-                    type="button"
-                    className={`w-full rounded-sm border border-transparent px-1 py-0.5 text-left text-[15px] transition-colors hover:text-white ${
+  <li key={c.id}>
+    <button
+      type="button"
+      
+      className={`w-full rounded-sm border border-transparent px-1 py-0.5 text-left text-[15px] transition-colors hover:text-white ${
                       activeCat === c ? 'border-[#333] text-[#ba203f]' : 'text-gray-400'
                     }`}
-                    onClick={() => pickCat(c)}
-                  >
-                    {c}
-                  </button>
-                </li>
-              ))}
+      onClick={() => pickCat(c.nombre)}
+    >
+      {c.nombre}
+    </button>
+  </li>
+))}
             </ul>
           </section>
           <section>
-            <h3 className="mb-2 font-sans text-sm font-semibold uppercase text-white">
-              Filtros especiales
-            </h3>
-            <button
-              type="button"
-              className="text-left text-[15px] text-gray-400 hover:text-white"
-              onClick={() => pickCat('Amplificadores')}
-            >
-              Ofertas destacadas → Amplificadores
-            </button>
-          </section>
+          <h3 className="mb-2 font-sans text-sm font-semibold uppercase text-white">
+            Filtros especiales
+          </h3>
+
+         
+
+          <button
+          
+            type="button"
+            className={`mt-3 block text-left text-[15px] transition-colors ${
+              onlyAvailable ? 'text-[#ba203f]' : 'text-gray-400 hover:text-white'
+            }`}
+            onClick={() => setOnlyAvailable((prev) => !prev)}
+          >
+            {onlyAvailable ? '✔ Solo disponibles' : 'Solo productos disponibles'}
+          </button>
+          <div className="mt-4 space-y-2">
+  <p className="text-[12px] uppercase tracking-widest text-gray-500">
+    Rango de precio
+  </p>
+
+  <input
+    type="number"
+    placeholder="Mínimo"
+    value={priceRange.min}
+    onChange={(e) =>
+      setPriceRange((prev) => ({ ...prev, min: e.target.value }))
+    }
+    className="w-full rounded-sm border border-[#333333] bg-black px-2 py-1 text-sm text-white"
+  />
+
+  <input
+    type="number"
+    placeholder="Máximo"
+    value={priceRange.max}
+    onChange={(e) =>
+      setPriceRange((prev) => ({ ...prev, max: e.target.value }))
+    }
+    className="w-full rounded-sm border border-[#333333] bg-black px-2 py-1 text-sm text-white"
+  />
+  <button
+  className="mt-2 w-full bg-[#ba203f] text-white text-sm py-2 rounded
+  transition-all duration-150 hover:bg-[#8f1a35] hover:scale-[1.02] active:scale-95"
+  onClick={() => setAppliedRange(priceRange)}
+>
+  Aplicar filtro
+</button>
+</div>
+        </section>
+        
         </aside>
 
         <div className="flex-1">
-          <header className="catalogo-toolbar mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <header className="catalogo-toolbar mb-8">
             <div>
               <h1 className="font-sans text-3xl font-bold text-white">{titleFor(activeCat)}</h1>
               <p className="mt-2 font-sans text-xs uppercase tracking-widest text-gray-500">
-                MOSTRANDO {visibleCount(activeCat)} DE {PRODUCTS.length} PRODUCTOS
+                MOSTRANDO {list.length} DE {products.length} PRODUCTOS
               </p>
             </div>
-            <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <span>Ordenar por:</span>
-              <select
-                aria-label="Ordenar por"
-                className="rounded-sm border border-[#333333] bg-black px-2 py-1 text-xs text-white focus:border-[#ba203f] focus:outline-none"
-                defaultValue="featured"
-              >
-                <option value="featured">Destacados</option>
-                <option value="price-asc">Precio: Menor a mayor</option>
-                <option value="new">Novedades</option>
-              </select>
+            <div className="mt-4">
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full max-w-sm rounded-sm border border-[#333333] bg-black px-3 py-2 text-sm text-white focus:border-[#ba203f] focus:outline-none"
+              />
             </div>
           </header>
 
           <div className="grid gap-2 pb-16 md:grid-cols-2 xl:grid-cols-3">
-            {flagship && showFlagship(activeCat) && (
-              <div className="group relative mb-8 overflow-hidden border border-[#333333] bg-[#1A1A1A] md:col-span-2 xl:col-span-2">
-                <div className="absolute left-4 top-4 z-10">
-                  <span className="bg-[#ba203f] px-2 py-0.5 text-[10px] font-bold uppercase tracking-tighter text-white">
-                    NUEVO
-                  </span>
-                </div>
-                <img
-                  alt={flagship.name}
-                  className="h-[450px] w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-[1.03]"
-                  src={flagship.image}
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-8">
-                  <Link to={`/producto/${flagship.id}`}>
-                    <h2 className="font-sans text-2xl font-bold text-white">{flagship.name}</h2>
-                  </Link>
-                  <p className="mb-4 mt-3 max-w-md text-sm text-gray-400">
-                    {flagship.catalogSubtitle ?? flagship.description}
-                  </p>
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <span className="font-sans text-2xl font-bold text-[#ba203f]">
-                      {formatPriceEUR(flagship.price)}
-                    </span>
-                    <button
-                      type="button"
-                      className="bg-[#ba203f] px-6 py-2.5 font-sans text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#8f1a35]"
-                      onClick={() => addItem(flagship, 1)}
-                    >
-                      Añadir al carrito
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            
 
             {list.map((p) => (
               <TarjetaProducto key={p.id} product={p} compactCartIcon />
@@ -148,6 +236,6 @@ function titleFor(cat) {
   return cat === 'Audio Pro' ? 'Audio profesional' : cat
 }
 
-function visibleCount(cat) {
-  return PRODUCTS.filter((p) => cat === 'Todos' || p.category === cat).length
+function visibleCount() {
+  return list.length
 }
