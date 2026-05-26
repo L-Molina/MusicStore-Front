@@ -40,7 +40,7 @@ const isSeller = user?.rol === "VENDEDOR";
     to="/vendedor"
     className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
   >
-    Panel vendedor
+    Mis productos
   </Link>
 )}
         </div>

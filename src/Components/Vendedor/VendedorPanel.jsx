@@ -20,6 +20,7 @@ const fetchProducts = async () => {
       },
     })
 
+
     const data = await res.json()
 
     const formatted = await Promise.all(
