@@ -1,16 +1,13 @@
 import { Link } from 'react-router-dom'
-import './TarjetaProducto.css'
 import { getProductImageUrl } from "../../utils/images"
+import './TarjetaProducto.css'
 
 export default function TarjetaProducto({ product }) {
   const price = Number(product.price ?? 0)
-
   const discount = Number(product.discount ?? 0)
+  const discountedPrice = Number(product.discountedPrice ?? price)
 
-  const discountedPrice =
-    discount > 0
-      ? price * (1 - discount / 100)
-      : price
+  const hasDiscount = discount > 0 && discountedPrice < price
 
   return (
     <Link
@@ -37,17 +34,16 @@ export default function TarjetaProducto({ product }) {
 
       <div className="mt-auto border-t border-[#222] pt-3">
         <div className="flex h-[48px] flex-col justify-start">
-  <span className="font-sans font-bold text-white">
-    $
-    {(discount > 0 ? discountedPrice : price).toFixed(2)}
-  </span>
+          <span className="font-sans font-bold text-white">
+            ${hasDiscount ? discountedPrice.toFixed(2) : price.toFixed(2)}
+          </span>
 
-  {discount > 0 && (
-    <span className="text-gray-400 line-through opacity-70">
-      ${price.toFixed(2)}
-    </span>
-  )}
-</div>
+          {hasDiscount && (
+            <span className="text-gray-400 line-through opacity-70">
+              ${price.toFixed(2)}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   )

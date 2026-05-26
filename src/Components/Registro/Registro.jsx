@@ -1,11 +1,11 @@
-import { useState, useId } from "react";
+import { useId, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
-import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import { useAuth } from "../../context/AuthContext";
-import "./registro.css";
+import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+import "./Registro.css";
 
-export default function registro() {
+export default function Registro() {
   const { register } = useAuth();
   const [role, setRole] = useState("COMPRADOR");
 

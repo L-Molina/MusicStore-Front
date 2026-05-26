@@ -1,8 +1,10 @@
-/** Formato alineado a mocks Stitch (EUR, locale es-ES) */
-export function formatPriceEUR(amount) {
-  return new Intl.NumberFormat('es-ES', {
+export function formatPriceARS(amount) {
+  return new Intl.NumberFormat('es-AR', {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'ARS',
     minimumFractionDigits: 2,
-  }).format(Number(amount))
+    maximumFractionDigits: 2,
+  }).format(Number(amount ?? 0))
 }
+
+export const formatPriceEUR = formatPriceARS

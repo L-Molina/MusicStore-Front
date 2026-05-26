@@ -1,5 +1,6 @@
-  import { useCallback, useEffect, useMemo, useState } from 'react'
-  import { CartContext } from './cart-context.js'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from './AuthContext.jsx'
+import { CartContext } from './cart-context.js'
 
 async function mapCartItems(carrito) {
   const items = carrito?.items ?? []
@@ -13,8 +14,10 @@ async function mapCartItems(carrito) {
           `http://localhost:8080/fotos/${item.producto.fotosIds[0]}`
         )
 
-        const data = await res.json()
-        fotos = [data]
+        if (res.ok) {
+          const data = await res.json()
+          fotos = [data]
+        }
       }
 
       return {
@@ -34,95 +37,109 @@ async function mapCartItems(carrito) {
   )
 }
 
-  export function CartProvider({ children }) {
-    const user = JSON.parse(localStorage.getItem('user'))
-const usuarioId = user?.id
-    const [items, setItems] = useState([])
+export function CartProvider({ children }) {
+  const { user, token } = useAuth()
+  const usuarioId = user?.id
+
+  const [items, setItems] = useState([])
 
   const loadCart = useCallback(async () => {
-    
+    if (!usuarioId || !token) {
+      setItems([])
+      return
+    }
+
     try {
-      const token = localStorage.getItem('token')
       const res = await fetch(
-  `http://localhost:8080/carrito/usuario/${usuarioId}`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-)
-
-      if (!res.ok) return
-
-      const carrito = await res.json()
-
-      const mapped = await mapCartItems(carrito)
-setItems(mapped)
-    } catch (err) {
-      console.error('Error cargando carrito:', err)
-    }
-  }, [])
-
-  const addItem = useCallback(async (product, qty = 1) => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:8080/carrito/agregar', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify({
-    usuarioId,
-    productoId: product.id,
-    cantidad: qty,
-  }),
-})
-
-      if (!res.ok) return
-
-      const carrito = await res.json()
-
-      const mapped = await mapCartItems(carrito)
-setItems(mapped)
-    } catch (err) {
-      console.error('Error agregando producto:', err)
-    }
-  }, [])
-
-  const removeItem = useCallback(async (itemId) => {
-    try {
-      const token = localStorage.getItem('token')
-      await fetch(
-        `http://localhost:8080/carrito/item/${itemId}`,
+        `http://localhost:8080/carrito/usuario/${usuarioId}`,
         {
-          method: 'DELETE',
           headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  }
+            Authorization: `Bearer ${token}`,
+          },
         }
       )
 
-      setItems((prev) =>
-        prev.filter((x) => x.itemId !== itemId)
-      )
-    } catch (err) {
-      console.error('Error eliminando item:', err)
-    }
-  }, [])
+      if (!res.ok) return
 
-  const setQuantity = useCallback(async (itemId, quantity) => {
-    try {
-      const token = localStorage.getItem('token')
-      if (quantity < 1) {
-        removeItem(itemId)
+      const carrito = await res.json()
+      const mapped = await mapCartItems(carrito)
+
+      setItems(mapped)
+    } catch (err) {
+      console.error('Error cargando carrito:', err)
+    }
+  }, [usuarioId, token])
+
+  const addItem = useCallback(
+    async (product, qty = 1) => {
+      if (!usuarioId || !token) {
+        alert('Tenés que iniciar sesión para agregar productos al carrito.')
         return
       }
 
-      const res = await fetch(
-        `http://localhost:8080/carrito/item/${itemId}`,
-        {
+      try {
+        const res = await fetch('http://localhost:8080/carrito/agregar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            usuarioId,
+            productoId: product.id,
+            cantidad: qty,
+          }),
+        })
+
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error('Error agregando producto:', errorText)
+          return
+        }
+
+        const carrito = await res.json()
+        const mapped = await mapCartItems(carrito)
+
+        setItems(mapped)
+      } catch (err) {
+        console.error('Error agregando producto:', err)
+      }
+    },
+    [usuarioId, token]
+  )
+
+  const removeItem = useCallback(
+    async (itemId) => {
+      if (!token) return
+
+      try {
+        await fetch(`http://localhost:8080/carrito/item/${itemId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        setItems((prev) => prev.filter((x) => x.itemId !== itemId))
+      } catch (err) {
+        console.error('Error eliminando item:', err)
+      }
+    },
+    [token]
+  )
+
+  const setQuantity = useCallback(
+    async (itemId, quantity) => {
+      if (!token) return
+
+      try {
+        if (quantity < 1) {
+          removeItem(itemId)
+          return
+        }
+
+        const res = await fetch(`http://localhost:8080/carrito/item/${itemId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -131,53 +148,58 @@ setItems(mapped)
           body: JSON.stringify({
             cantidad: quantity,
           }),
+        })
+
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error('Error actualizando cantidad:', errorText)
+          return
         }
-      )
 
-      if (!res.ok) return
+        const carrito = await res.json()
+        const mapped = await mapCartItems(carrito)
 
-      const carrito = await res.json()
+        setItems(mapped)
+      } catch (err) {
+        console.error('Error actualizando cantidad:', err)
+      }
+    },
+    [removeItem, token]
+  )
 
-      const mapped = await mapCartItems(carrito)
-setItems(mapped)
-    } catch (err) {
-      console.error('Error actualizando cantidad:', err)
-    }
-  }, [removeItem])
-
-    const clear = useCallback(() => setItems([]), [])
+  const clear = useCallback(() => setItems([]), [])
 
   const total = useMemo(
     () =>
       items.reduce(
         (s, x) =>
-          s +
-          (x.discount > 0 ? x.discountedPrice : x.price) * x.quantity,
+          s + (x.discount > 0 ? x.discountedPrice : x.price) * x.quantity,
         0
       ),
-    [items],
+    [items]
   )
 
-    const count = useMemo(
-      () => items.reduce((s, x) => s + x.quantity, 0),
-      [items],
-    )
+  const count = useMemo(
+    () => items.reduce((s, x) => s + x.quantity, 0),
+    [items]
+  )
 
-    const value = useMemo(
-      () => ({
-        items,
-        addItem,
-        removeItem,
-        setQuantity,
-        clear,
-        total,
-        count,
-      }),
-      [items, addItem, removeItem, setQuantity, clear, total, count],
-    )
+  const value = useMemo(
+    () => ({
+      items,
+      addItem,
+      removeItem,
+      setQuantity,
+      clear,
+      total,
+      count,
+    }),
+    [items, addItem, removeItem, setQuantity, clear, total, count]
+  )
+
   useEffect(() => {
     loadCart()
   }, [loadCart])
 
-    return <CartContext.Provider value={value}>{children}</CartContext.Provider>
-  }
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+}
