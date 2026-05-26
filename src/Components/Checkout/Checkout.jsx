@@ -7,8 +7,6 @@ import { useCart } from "../../hooks/useCart.js";
 
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 
-import "./Checkout.css";
-
 const SHIPPING = 25;
 
 export default function Carrito() {

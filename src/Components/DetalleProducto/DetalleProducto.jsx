@@ -4,7 +4,6 @@ import { PRODUCTS, getProductById } from '../../data/products.js'
 import { useCart } from '../../hooks/useCart.js'
 import { formatPriceEUR } from '../../utils/formatPrice.js'
 import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
-import './DetalleProducto.css'
 
 export default function DetalleProducto() {
   const { id } = useParams()

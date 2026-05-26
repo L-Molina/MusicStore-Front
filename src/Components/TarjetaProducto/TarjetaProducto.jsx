@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart'
 import { formatPriceEUR } from '../../utils/formatPrice'
 import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
-import './TarjetaProducto.css'
 
 /** Tarjeta estilo mocks cat_logo / novedades (borde `#333333`, superficie `#1A1A1A`). */
 export default function TarjetaProducto({ product, compactCartIcon }) {
