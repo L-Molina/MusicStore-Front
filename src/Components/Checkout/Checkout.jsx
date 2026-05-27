@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { formatPriceEUR } from "../../utils/formatPrice.js";
+
 import { useCart } from "../../hooks/useCart.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./Checkout.css";
 import { useNavigate } from "react-router-dom";
+import { getProductImageUrl } from "../../utils/images"
 
 const SHIPPING = 25;
 
@@ -148,7 +149,7 @@ navigate("/");
                 >
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-zinc-900">
                     <img
-                      src={item.image}
+                      src={getProductImageUrl(item)}
                       alt={item.name}
                       className="size-full object-cover"
                     />
@@ -171,7 +172,8 @@ navigate("/");
                       </span>
 
                       <span className="font-sans text-sm font-bold text-[#e2e2e2]">
-                        {formatPriceEUR(item.price * item.quantity)}
+                        
+                        ${(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -186,7 +188,8 @@ navigate("/");
                 </span>
 
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
-                  {formatPriceEUR(subtotalProductos)}
+                  ${subtotalProductos.toFixed(2)}
+                  
                 </span>
               </div>
 
@@ -196,7 +199,7 @@ navigate("/");
                 </span>
 
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
-                  {formatPriceEUR(conEnvío)}
+                  ${conEnvío.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -207,7 +210,7 @@ navigate("/");
               </span>
 
               <span className="font-sans text-3xl font-bold text-[#ba203f] tabular-nums">
-                {formatPriceEUR(granTotal)}
+                ${granTotal.toFixed(2)}
               </span>
             </div>
 

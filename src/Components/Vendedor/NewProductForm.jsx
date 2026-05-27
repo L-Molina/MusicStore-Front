@@ -179,9 +179,7 @@ const handleClose = () => {
                   <p className="mt-2 text-sm text-zinc-500">
                     Haz clic para subir una imagen
                   </p>
-                  <p className="text-xs text-zinc-400">
-                    PNG, JPG hasta 5MB
-                  </p>
+                  
                 </div>
               )}
               

@@ -59,13 +59,18 @@ const [tempStock, setTempStock] = useState(
         <div className="space-y-4 p-4">
           {/* Name & Description */}
           <div>
-            <h3 className="line-clamp-1 text-lg font-semibold text-zinc-900">
-              {product.name}
-            </h3>
-            <p className="mt-1 line-clamp-2 text-sm text-zinc-500">
-              {product.description}
-            </p>
-          </div>
+  <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+    {product.categoryName}
+  </p>
+
+  <h3 className="line-clamp-1 text-lg font-semibold text-zinc-900">
+    {product.name}
+  </h3>
+
+  <p className="mt-1 min-h-[80px] line-clamp-4 text-sm text-zinc-500">
+    {product.description}
+  </p>
+</div>
 
           {/* Price Section */}
           <div className="flex items-baseline gap-2">
