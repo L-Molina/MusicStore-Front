@@ -71,18 +71,21 @@ export default function Checkout() {
       envio: conEnvio,
       metodoPago: selectedPaymentTitle,
       estado: backendOrder?.estado ?? "REALIZADA",
-      detallesPedido: items.map((item) => ({
-        id: item.itemId ?? item.id,
-        productoId: item.id,
-        nombre: item.name,
-        categoria: item.category,
-        cantidad: item.quantity,
-        precioUnitario:
-          item.discount > 0 ? item.discountedPrice : item.price,
-        subtotal:
-          (item.discount > 0 ? item.discountedPrice : item.price) *
-          item.quantity,
-      })),
+      detallesPedido: items.map((item) => {
+        const precioUnitario =
+          item.discount > 0 ? item.discountedPrice : item.price
+
+        return {
+          id: item.itemId ?? item.id,
+          productoId: item.id,
+          nombre: item.name,
+          categoria: item.category,
+          cantidad: item.quantity,
+          precioUnitario,
+          subtotal: precioUnitario * item.quantity,
+          imagen: getProductImageUrl(item),
+        }
+      }),
     }
 
     localStorage.setItem(
@@ -164,13 +167,11 @@ export default function Checkout() {
                 key={method.id}
                 type="button"
                 onClick={() => setSelectedPayment(method.id)}
-                className={`group relative flex w-full flex-col gap-4 rounded-lg border p-6 text-left transition-all duration-300 md:flex-row
-                  ${
-                    isSelected
-                      ? "border-[#ba203f] bg-[#242628]"
-                      : "border-zinc-800 bg-[#1a1c1c] hover:border-zinc-500"
-                  }
-                `}
+                className={`group relative flex w-full flex-col gap-4 rounded-lg border p-6 text-left transition-all duration-300 md:flex-row ${
+                  isSelected
+                    ? "border-[#ba203f] bg-[#242628]"
+                    : "border-zinc-800 bg-[#1a1c1c] hover:border-zinc-500"
+                }`}
               >
                 <div className="flex items-center justify-center rounded bg-zinc-900 p-4">
                   <MaterialSymbol>{method.icon}</MaterialSymbol>
@@ -182,13 +183,11 @@ export default function Checkout() {
                   </span>
 
                   <div
-                    className={`size-6 rounded-full border-2 transition-all
-                      ${
-                        isSelected
-                          ? "border-[#ba203f] bg-[#ba203f]"
-                          : "border-zinc-500"
-                      }
-                    `}
+                    className={`size-6 rounded-full border-2 transition-all ${
+                      isSelected
+                        ? "border-[#ba203f] bg-[#ba203f]"
+                        : "border-zinc-500"
+                    }`}
                   />
                 </div>
               </button>
@@ -284,16 +283,14 @@ export default function Checkout() {
               </span>
             </div>
 
-            <div className="space-y-4">
-              <button
-                type="button"
-                disabled={!selectedPayment || loading || items.length === 0}
-                onClick={handleCheckout}
-                className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {loading ? "Procesando..." : "Finalizar compra"}
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={!selectedPayment || loading || items.length === 0}
+              onClick={handleCheckout}
+              className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Procesando..." : "Finalizar compra"}
+            </button>
           </div>
         </div>
       </div>

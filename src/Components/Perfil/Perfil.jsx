@@ -4,7 +4,7 @@ import { formatPriceEUR } from "../../utils/formatPrice"
 import "./Perfil.css"
 
 export default function Perfil() {
-  const { token, user, logout } = useAuth()
+  const { token, logout } = useAuth()
 
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({
@@ -12,6 +12,7 @@ export default function Perfil() {
     mail: "",
   })
   const [orders, setOrders] = useState([])
+  const [selectedOrder, setSelectedOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
@@ -261,6 +262,14 @@ export default function Perfil() {
                       : "Compra registrada"}
                   </strong>
                 </div>
+
+                <button
+                  type="button"
+                  className="perfil-order-detail-btn"
+                  onClick={() => setSelectedOrder(order)}
+                >
+                  Ver detalle
+                </button>
               </article>
             ))}
           </div>
@@ -281,6 +290,93 @@ export default function Perfil() {
           Eliminar cuenta
         </button>
       </section>
+
+      {selectedOrder && (
+        <div
+          className="perfil-modal-backdrop"
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div className="perfil-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="perfil-modal-header">
+              <div>
+                <span className="perfil-kicker">Detalle de compra</span>
+                <h2>Pedido #{selectedOrder.id}</h2>
+                <p>{selectedOrder.fecha || "Fecha no disponible"}</p>
+              </div>
+
+              <button
+                type="button"
+                className="perfil-modal-close"
+                onClick={() => setSelectedOrder(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="perfil-modal-summary">
+              <div>
+                <span>Método de pago</span>
+                <strong>{selectedOrder.metodoPago || "No especificado"}</strong>
+              </div>
+
+              <div>
+                <span>Subtotal</span>
+                <strong>{formatPriceEUR(selectedOrder.subtotal || 0)}</strong>
+              </div>
+
+              <div>
+                <span>Envío</span>
+                <strong>{formatPriceEUR(selectedOrder.envio || 0)}</strong>
+              </div>
+
+              <div>
+                <span>Total</span>
+                <strong>{formatPriceEUR(selectedOrder.total || 0)}</strong>
+              </div>
+            </div>
+
+            <div className="perfil-modal-products">
+              {selectedOrder.detallesPedido?.map((item) => (
+                <article
+                  key={`${selectedOrder.id}-${item.productoId}`}
+                  className="perfil-modal-product"
+                >
+                  <div className="perfil-modal-product-img">
+                    {item.imagen ? (
+                      <img src={item.imagen} alt={item.nombre} />
+                    ) : (
+                      <div className="perfil-modal-product-placeholder">
+                        MusicStore
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="perfil-modal-product-info">
+                    <span>{item.categoria || "Sin categoría"}</span>
+                    <h3>{item.nombre}</h3>
+
+                    <p>
+                      Cantidad: <strong>{item.cantidad}</strong>
+                    </p>
+
+                    <p>
+                      Precio unitario:{" "}
+                      <strong>
+                        {formatPriceEUR(item.precioUnitario || 0)}
+                      </strong>
+                    </p>
+                  </div>
+
+                  <div className="perfil-modal-product-total">
+                    <span>Subtotal</span>
+                    <strong>{formatPriceEUR(item.subtotal || 0)}</strong>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

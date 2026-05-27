@@ -29,6 +29,24 @@ export default function ProductPanel() {
     return (numericPrice * numericDiscountPercentage) / 100
   }
 
+  const getLastPhotoId = (fotoIds) => {
+    if (!fotoIds || fotoIds.length === 0) return null
+    return fotoIds[fotoIds.length - 1]
+  }
+
+  const fetchProductPhoto = async (fotoIds) => {
+    const lastPhotoId = getLastPhotoId(fotoIds)
+
+    if (!lastPhotoId) return []
+
+    const fotoRes = await fetch(`http://localhost:8080/fotos/${lastPhotoId}`)
+
+    if (!fotoRes.ok) return []
+
+    const fotoData = await fotoRes.json()
+    return [fotoData]
+  }
+
   const fetchProducts = useCallback(async () => {
     if (!token) return
 
@@ -52,18 +70,7 @@ export default function ProductPanel() {
 
       const formatted = await Promise.all(
         data.map(async (p) => {
-          let fotos = []
-
-          if (p.fotosIds?.length > 0) {
-            const fotoRes = await fetch(
-              `http://localhost:8080/fotos/${p.fotosIds[0]}`
-            )
-
-            if (fotoRes.ok) {
-              const fotoData = await fotoRes.json()
-              fotos = [fotoData]
-            }
-          }
+          const fotos = await fetchProductPhoto(p.fotosIds)
 
           const price = Number(p.precio ?? 0)
           const discountAmount = Number(p.descuento ?? 0)
@@ -137,24 +144,44 @@ export default function ProductPanel() {
         throw new Error("Error actualizando producto")
       }
 
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === id
-            ? {
-                ...product,
-                ...updates,
-                discount: finalDiscountPercentage,
-                discountAmount,
-              }
-            : product
-        )
-      )
+      await fetchProducts()
     } catch (error) {
       console.error("Error actualizando producto:", error)
     }
   }
 
+  const handleUpdateImage = async (productId, file) => {
+    try {
+      const formData = new FormData()
+      formData.append("productoId", productId)
+      formData.append("file", file)
+
+      const res = await fetch("http://localhost:8080/fotos", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!res.ok) {
+        throw new Error("Error subiendo nueva foto")
+      }
+
+      await fetchProducts()
+    } catch (error) {
+      console.error("Error actualizando foto:", error)
+      alert("No se pudo actualizar la foto del producto.")
+    }
+  }
+
   const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "¿Seguro que querés eliminar este producto?"
+    )
+
+    if (!confirmDelete) return
+
     try {
       const res = await fetch(`http://localhost:8080/productos/${id}`, {
         method: "DELETE",
@@ -227,6 +254,7 @@ export default function ProductPanel() {
       await fetchProducts()
     } catch (error) {
       console.error("Error creando producto:", error)
+      alert("No se pudo crear el producto.")
     }
   }
 
@@ -252,12 +280,12 @@ export default function ProductPanel() {
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
-              Mis Productos
+              Mis productos
             </h1>
 
             <p className="mt-2 text-zinc-500">
-              Gestiona tus productos publicados, ajusta precios, stock y
-              descuentos.
+              Gestioná tus productos publicados, ajustá precios, stock,
+              descuentos e imágenes.
             </p>
           </div>
 
@@ -315,6 +343,7 @@ export default function ProductPanel() {
                 product={product}
                 onUpdate={handleUpdate}
                 onDelete={handleDelete}
+                onUpdateImage={handleUpdateImage}
               />
             ))}
           </div>
@@ -329,7 +358,7 @@ export default function ProductPanel() {
             <p className="mt-1 text-sm text-zinc-500">
               {searchTerm
                 ? "No se encontraron productos."
-                : "Aún no has publicado ningún producto."}
+                : "Aún no publicaste ningún producto."}
             </p>
           </div>
         )}

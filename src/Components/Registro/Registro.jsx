@@ -1,340 +1,353 @@
-import { useId, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
-import { useAuth } from "../../context/AuthContext";
-import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import "./Registro.css";
+import { useId, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import logoText from "../../assets/logo-text.png"
+import registerHero from "../../assets/register-hero.jpg"
+import MaterialSymbol from "../MaterialSymbol/MaterialSymbol"
+import "./Registro.css"
 
 export default function Registro() {
-  const { register } = useAuth();
-  const [role, setRole] = useState("COMPRADOR");
+  const navigate = useNavigate()
 
-  const emailId = useId();
-  const userId = useId();
-  const nombreId = useId();
-  const apellidoId = useId();
-  const passId = useId();
-  const remId = useId();
+  const nombreId = useId()
+  const apellidoId = useId()
+  const usernameId = useId()
+  const emailId = useId()
+  const passwordId = useId()
+  const confirmPasswordId = useId()
+  const roleId = useId()
 
-  const [email, setEmail] = useState("");
-  const [user, setUser] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [shakeKey, setShakeKey] = useState(0);
+  const [form, setForm] = useState({
+    nombre: "",
+    apellido: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "COMPRADOR",
+  })
 
-  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  function validate() {
-    if (!nombre.trim()) return "Ingresá tu nombre.";
-    if (!apellido.trim()) return "Ingresá tu apellido.";
-    if (!user.trim()) return "Ingresá un usuario.";
-    if (!email.trim()) return "Ingresá tu correo electrónico.";
-    if (!/\S+@\S+\.\S+/.test(email)) return "Correo inválido.";
-    if (!password) return "Ingresá una contraseña.";
-    return "";
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    setError("")
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-  
-    const msg = validate();
-  
-    if (msg) {
-      setError(msg);
-      setShakeKey((k) => k + 1);
-      return;
+  const validate = () => {
+    if (!form.nombre.trim()) return "Ingresá tu nombre."
+    if (!form.apellido.trim()) return "Ingresá tu apellido."
+    if (!form.username.trim()) return "Ingresá un nombre de usuario."
+    if (!form.email.trim()) return "Ingresá tu correo electrónico."
+
+    if (!/\S+@\S+\.\S+/.test(form.email)) {
+      return "El correo electrónico no tiene un formato válido."
     }
-  
-    setLoading(true);
-  
+
+    if (!form.password) return "Ingresá una contraseña."
+
+    if (form.password.length < 4) {
+      return "La contraseña debe tener al menos 4 caracteres."
+    }
+
+    if (form.password !== form.confirmPassword) {
+      return "Las contraseñas no coinciden."
+    }
+
+    if (!acceptTerms) {
+      return "Debés aceptar los términos y condiciones."
+    }
+
+    return ""
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const validationError = validate()
+
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
     try {
-      const data = await register(
-        {
-          nombre,
-          apellido,
-          username: user,
-          email,
-          password,
-          role
+      setLoading(true)
+      setError("")
+
+      const res = await fetch("http://localhost:8080/api/auth/registrar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        remember
-      );
-  
-      
-        navigate("/");
-      
+        body: JSON.stringify({
+          nombre: form.nombre,
+          apellido: form.apellido,
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          role: form.role,
+        }),
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || "No se pudo registrar el usuario.")
+      }
+
+      alert("Cuenta creada correctamente. Ya podés iniciar sesión.")
+      navigate("/login")
     } catch (err) {
-      setError(err.message);
-      setShakeKey((k) => k + 1);
+      console.error("Error registrando usuario:", err)
+      setError("No se pudo crear la cuenta. Revisá los datos ingresados.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
-  /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className="registro-bg flex flex-col items-center justify-center px-6 py-16 relative">
-      <div className="registro-noise" aria-hidden="true" />
+    <main className="registro-page">
+      <section className="registro-left">
+        <div className="registro-left-bg">
+          <img src={registerHero} alt="" />
+          <div className="registro-left-overlay" />
+        </div>
 
-      <main className="relative z-10 w-full max-w-[420px] registro-fade-in">
-        {/* ── Marca ─────────────────────────────────────────────── */}
-        <header className="flex flex-col items-center mb-10">
-          <Link to="/" aria-label="Volver al inicio">
-            <img
-              src={BRAND_LOGO_URL}
-              alt="MusicStore"
-              className="h-20 w-auto object-contain mb-6"
-            />
-          </Link>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ba203f]">
-            Crea tu cuenta
+        <Link to="/login" className="registro-back">
+          <MaterialSymbol>arrow_back</MaterialSymbol>
+          Volver
+        </Link>
+
+        <div className="registro-left-content">
+          <h1>Eleva tu sonido.</h1>
+
+          <p>
+            Unite a la comunidad más grande de músicos y productores. Accedé a
+            instrumentos premium y soporte técnico especializado.
           </p>
-        </header>
+        </div>
+      </section>
 
-        {/* ── Tarjeta ───────────────────────────────────────────── */}
-        <section
-          className="registro-card rounded-lg p-8"
-          key={shakeKey}
-          style={shakeKey > 0 ? { animation: "shake 0.4s ease" } : undefined}
-        >
-          {/* Error banner */}
+      <section className="registro-right">
+        <div className="registro-form-shell">
+          <header className="registro-header">
+            <img
+              src={logoText}
+              alt="MusicStore"
+              className="registro-logo"
+            />
+
+            <h2>Crea tu cuenta</h2>
+
+            <p>Comienza tu viaje musical con nosotros hoy mismo.</p>
+          </header>
+
           {error && (
-            <div
-              role="alert"
-              className="mb-6 flex items-center gap-3 border border-[#ba203f]/40 bg-[#ba203f]/10 rounded px-4 py-3"
-            >
-              <MaterialSymbol className="text-[#ba203f] text-lg shrink-0">
-                error
-              </MaterialSymbol>
-              <p className="text-[13px] text-[#e2e2e2]">{error}</p>
+            <div className="registro-error">
+              <MaterialSymbol>error</MaterialSymbol>
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            {/* Nombre y Apellido */}
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor={nombreId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
-              >
-                Nombre y Apellido
-              </label>
-              <div className="registro-input-wrapper relative">
-                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
-                  badge
-                </MaterialSymbol>
+          <form className="registro-form" onSubmit={handleSubmit}>
+            <div className="registro-two-cols">
+              <label>
+                Nombre
                 <input
                   id={nombreId}
-                  type="nombre"
-                  autoComplete="nombre"
-                  value={nombre}
-                  onChange={(e) => {
-                    setNombre(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="Nombre"
-                  className="registro-input"
+                  type="text"
+                  name="nombre"
+                  value={form.nombre}
+                  onChange={handleChange}
+                  placeholder="Ej. Juan"
                   disabled={loading}
                 />
-              </div>
-              <div className="registro-input-wrapper relative">
-                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
-                  badge
-                </MaterialSymbol>
+              </label>
+
+              <label>
+                Apellido
                 <input
                   id={apellidoId}
-                  type="apellido"
-                  autoComplete="apellido"
-                  value={apellido}
-                  onChange={(e) => {
-                    setApellido(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="Apellido"
-                  className="registro-input"
+                  type="text"
+                  name="apellido"
+                  value={form.apellido}
+                  onChange={handleChange}
+                  placeholder="Ej. Pérez"
                   disabled={loading}
                 />
-              </div>
+              </label>
             </div>
 
-            {/* Usuario */}
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor={userId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
-              >
-                Nombre de Usuario
-              </label>
-              <div className="registro-input-wrapper relative">
-                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
-                  person
-                </MaterialSymbol>
+            <label>
+              Nombre de usuario
+              <div className="registro-input-icon">
+                <MaterialSymbol>person</MaterialSymbol>
+
                 <input
-                  id={userId}
-                  type="user"
-                  autoComplete="user"
-                  value={user}
-                  onChange={(e) => {
-                    setUser(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="Usuario"
-                  className="registro-input"
+                  id={usernameId}
+                  type="text"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="tu_usuario"
                   disabled={loading}
                 />
               </div>
-            </div>
+            </label>
 
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor={emailId}
-                className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
-              >
-                Correo electrónico
-              </label>
-              <div className="registro-input-wrapper relative">
-                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
-                  mail
-                </MaterialSymbol>
+            <label>
+              Correo electrónico
+              <div className="registro-input-icon">
+                <MaterialSymbol>mail</MaterialSymbol>
+
                 <input
                   id={emailId}
                   type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setError("");
-                  }}
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
                   placeholder="nombre@ejemplo.com"
-                  className="registro-input"
                   disabled={loading}
                 />
               </div>
-            </div>
+            </label>
 
-            {/* Contraseña */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor={passId}
-                  className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400"
-                >
-                  Contraseña
-                </label>
-              </div>
-              <div className="registro-input-wrapper relative">
-                <MaterialSymbol className="registro-input-icon material-symbols-outlined">
-                  lock
-                </MaterialSymbol>
-                <input
-                  id={passId}
-                  type={showPass ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="••••••••"
-                  className="registro-input"
-                  style={{ paddingRight: "44px" }}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  aria-label={
-                    showPass ? "Ocultar contraseña" : "Mostrar contraseña"
-                  }
-                  onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 transition-colors"
-                >
-                  <MaterialSymbol className="text-[20px]">
-                    {showPass ? "visibility_off" : "visibility"}
-                  </MaterialSymbol>
-                </button>
-              </div>
-            </div>
-            {/* Rol */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-400">
-                Tipo de cuenta
+            <div className="registro-two-cols">
+              <label>
+                Contraseña
+                <div className="registro-input-icon">
+                  <MaterialSymbol>lock</MaterialSymbol>
+
+                  <input
+                    id={passwordId}
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    disabled={loading}
+                  />
+
+                  <button
+                    type="button"
+                    className="registro-eye"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    <MaterialSymbol>
+                      {showPassword ? "visibility_off" : "visibility"}
+                    </MaterialSymbol>
+                  </button>
+                </div>
               </label>
 
+              <label>
+                Confirmar
+                <div className="registro-input-icon">
+                  <MaterialSymbol>lock</MaterialSymbol>
+
+                  <input
+                    id={confirmPasswordId}
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    disabled={loading}
+                  />
+
+                  <button
+                    type="button"
+                    className="registro-eye"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  >
+                    <MaterialSymbol>
+                      {showConfirmPassword ? "visibility_off" : "visibility"}
+                    </MaterialSymbol>
+                  </button>
+                </div>
+              </label>
+            </div>
+
+            <label>
+              Tipo de cuenta
               <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="registro-input"
+                id={roleId}
+                name="role"
+                value={form.role}
+                onChange={handleChange}
                 disabled={loading}
               >
                 <option value="COMPRADOR">Comprador</option>
                 <option value="VENDEDOR">Vendedor</option>
               </select>
-            </div>
+            </label>
 
-            {/* Recordarme */}
-            <label
-              htmlFor={remId}
-              className="flex items-center gap-2.5 cursor-pointer select-none"
-            >
+            <label className="registro-terms">
               <input
-                id={remId}
                 type="checkbox"
-                className="registro-checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
                 disabled={loading}
               />
-              <span className="text-[12px] font-medium text-zinc-400">
-                Mantener sesión iniciada
+
+              <span>
+                Acepto los <strong>Términos de Servicio</strong> y{" "}
+                <strong>Política de Privacidad</strong> de MusicStore.
               </span>
             </label>
 
-            {/* Botón principal */}
-            <button
-              type="submit"
-              className="registro-btn-primary mt-2 flex items-center justify-center gap-2"
-              disabled={loading}
-              aria-busy={loading}
-            >
-              {loading ? (
-                <>
-                  <span
-                    className="inline-block h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
-                    aria-hidden="true"
-                  />
-                  Registrando…
-                </>
-              ) : (
-                "Registrarse"
-              )}
+            <button type="submit" className="registro-submit" disabled={loading}>
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
           </form>
-        </section>
 
-        {/* Pie */}
-        <footer className="mt-8 text-center">
-          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-400">
-            Al crear y registrar tu cuenta aceptás nuestros Términos de Servicio
-            y Política de Privacidad. MusicStore es una plataforma profesional
-            de audio.
+          <div className="registro-divider">
+            <span />
+            <p>O registrate con</p>
+            <span />
+          </div>
+
+          <div className="registro-socials">
+            <button type="button">
+              <span>G</span>
+              Google
+            </button>
+
+            <button type="button">
+              <span></span>
+              Apple
+            </button>
+          </div>
+
+          <p className="registro-login-link">
+            ¿Ya tenés una cuenta?{" "}
+            <Link to="/login">Inicia sesión aquí</Link>
           </p>
-        </footer>
-      </main>
+        </div>
+      </section>
 
-      {/* Barra de estado decorativa */}
-      <div
-        className="registro-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-400"
-        aria-hidden="true"
-      >
-        <span>System status: optimal</span>
-        <span>Secure encryption v2.4.0</span>
-      </div>
-    </div>
-  );
+      <footer className="registro-footer">
+        <strong>MusicStore</strong>
+
+        <nav>
+          <span>Soporte técnico</span>
+          <span>Envíos y devoluciones</span>
+          <span>Garantía</span>
+          <span>Localizador de tiendas</span>
+          <span>Contacto</span>
+        </nav>
+
+        <p>© 2026 MusicStore. Todos los derechos reservados.</p>
+      </footer>
+    </main>
+  )
 }

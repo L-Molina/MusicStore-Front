@@ -87,7 +87,7 @@ export default function Catalogo() {
 
             if (p.fotosIds?.length > 0) {
               const fotoRes = await fetch(
-                `http://localhost:8080/fotos/${p.fotosIds[0]}`
+                `http://localhost:8080/fotos/${p.fotosIds[p.fotosIds.length - 1]}`
               )
 
               if (fotoRes.ok) {

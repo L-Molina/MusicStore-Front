@@ -1,13 +1,13 @@
-import { useState, useId } from "react";
+import { useId, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
-import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+import logoText from "../../assets/logo-text.png";
 import { useAuth } from "../../context/AuthContext";
+import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 
 import "./Login.css";
 
 export default function Login() {
-  const { login} = useAuth();
+  const { login } = useAuth();
 
   const emailId = useId();
   const passId = useId();
@@ -25,9 +25,13 @@ export default function Login() {
 
   function validate() {
     if (!email.trim()) return "Ingresá tu correo electrónico.";
-    if (!/\S+@\S+\.\S+/.test(email))
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
       return "El correo no tiene un formato válido.";
+    }
+
     if (!password) return "Ingresá tu contraseña.";
+
     return "";
   }
 
@@ -44,17 +48,17 @@ export default function Login() {
 
     try {
       setLoading(true);
+      setError("");
 
       const data = await login(email, password, remember);
 
-      if(data.user.rol === "ADMIN"){
-        navigate("/admin");
-      }else {
+      if (data.user?.rol === "ADMIN" || data.user?.rol === "VENDEDOR") {
+        navigate("/vendedor");
+      } else {
         navigate("/");
       }
-      
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "No se pudo iniciar sesión.");
       setShakeKey((k) => k + 1);
     } finally {
       setLoading(false);
@@ -65,23 +69,22 @@ export default function Login() {
     <div className="login-bg flex flex-col items-center justify-center px-6 py-16 relative">
       <div className="login-noise" aria-hidden="true" />
 
-      <main className="relative z-10 w-full max-w-[420px] login-fade-in">
-        <header className="flex flex-col items-center mb-10">
+      <main className="relative z-10 w-full max-w-[460px] login-fade-in">
+        <header className="login-header">
           <img
-            src={BRAND_LOGO_URL}
+            src={logoText}
             alt="MusicStore"
-            className="h-20 w-auto object-contain mb-6"
+            className="login-logo"
           />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ba203f]">
-            Iniciar Sesión
-          </p>
+
+          <p className="login-title">Iniciar sesión</p>
         </header>
+
         <section
           className="login-card rounded-lg p-8"
           key={shakeKey}
           style={shakeKey > 0 ? { animation: "shake 0.4s ease" } : undefined}
         >
-          {" "}
           {error && (
             <div
               role="alert"
@@ -90,9 +93,11 @@ export default function Login() {
               <MaterialSymbol className="text-[#ba203f] text-lg shrink-0">
                 error
               </MaterialSymbol>
+
               <p className="text-[13px] text-[#e2e2e2]">{error}</p>
             </div>
           )}
+
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div className="flex flex-col gap-1.5">
               <label
@@ -101,10 +106,12 @@ export default function Login() {
               >
                 Correo electrónico
               </label>
+
               <div className="login-input-wrapper relative">
                 <MaterialSymbol className="login-input-icon material-symbols-outlined">
                   mail
                 </MaterialSymbol>
+
                 <input
                   id={emailId}
                   type="email"
@@ -120,6 +127,7 @@ export default function Login() {
                 />
               </div>
             </div>
+
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label
@@ -128,14 +136,17 @@ export default function Login() {
                 >
                   Contraseña
                 </label>
+
                 <a href="#" className="login-forgot">
                   ¿Olvidaste tu contraseña?
                 </a>
               </div>
+
               <div className="login-input-wrapper relative">
                 <MaterialSymbol className="login-input-icon material-symbols-outlined">
                   lock
                 </MaterialSymbol>
+
                 <input
                   id={passId}
                   type={showPass ? "text" : "password"}
@@ -150,6 +161,7 @@ export default function Login() {
                   style={{ paddingRight: "44px" }}
                   disabled={loading}
                 />
+
                 <button
                   type="button"
                   aria-label={
@@ -177,6 +189,7 @@ export default function Login() {
                 onChange={(e) => setRemember(e.target.checked)}
                 disabled={loading}
               />
+
               <span className="text-[12px] font-medium text-zinc-400">
                 Mantener sesión iniciada
               </span>
@@ -201,31 +214,22 @@ export default function Login() {
               )}
             </button>
           </form>
-          
-          
         </section>
 
         <footer className="mt-8 text-center">
           <p className="text-[13px] text-zinc-400">
             ¿No tenés cuenta?{" "}
-            <Link to="/Registro">
+            <Link to="/registro">
               <span className="registro-link">Registrate gratis</span>
             </Link>
           </p>
+
           <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-500">
             Al iniciar sesión aceptás nuestros Términos de Servicio y Política
             de Privacidad. MusicStore es una plataforma profesional de audio.
           </p>
         </footer>
       </main>
-
-      <div
-        className="login-status-bar font-mono text-[9px] uppercase tracking-widest text-zinc-400"
-        aria-hidden="true"
-      >
-        <span>System status: optimal</span>
-        <span>Secure encryption v2.4.0</span>
-      </div>
     </div>
   );
 }

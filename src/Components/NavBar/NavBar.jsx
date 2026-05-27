@@ -35,7 +35,7 @@ export default function NavBar() {
               to="/vendedor"
               className="navbar-link hidden font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
             >
-              Panel vendedor
+              Mis productos
             </Link>
           )}
         </div>
