@@ -2,38 +2,49 @@ import { Link } from "react-router-dom";
 import { useCart } from "../../hooks/useCart.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import { getProductImageUrl } from "../../utils/images"
+import { useAuth } from "../../context/AuthContext"
 const SHIPPING = 25;
 
 export default function Carrito() {
+  const { isAuthenticated } = useAuth()
   const { items, total, removeItem, setQuantity, addItem } = useCart();
 
   const subtotalProductos = total;
   const conEnvío = items.length > 0 ? SHIPPING : 0;
   const granTotal = subtotalProductos + conEnvío;
 
-  if (items.length === 0) {
-    return (
-      <div className="mx-auto max-w-2xl px-8 pb-32 pt-32 text-center font-sans">
-        <MaterialSymbol className="mb-4 text-6xl text-zinc-600">
-          shopping_cart
-        </MaterialSymbol>
-        <h1 className="text-4xl font-extrabold uppercase tracking-tighter text-[#e2e2e2]">
-          Tu Carrito está vacío
-        </h1>
+if (items.length === 0) {
+  return (
+    <div className="mx-auto max-w-2xl px-8 pb-32 pt-32 text-center font-sans">
+      <MaterialSymbol className="mb-4 text-6xl text-zinc-600">
+        shopping_cart
+      </MaterialSymbol>
+
+      <h1 className="text-4xl font-extrabold uppercase tracking-tighter text-[#e2e2e2]">
+        Tu Carrito está vacío
+      </h1>
+
+      {isAuthenticated ? (
         <p className="mt-3 text-zinc-500">
           Explorá el catálogo y agregá instrumentos antes de finalizar tu
           compra.
         </p>
-        <Link
-          to="/catalogo"
-          className="mt-8 inline-flex bg-[#ba203f] px-8 py-4 font-sans text-sm font-semibold uppercase tracking-wide text-white hover:brightness-110"
-        >
-          Ir al catálogo
-        </Link>
-      </div>
-    );
-  }
+      ) : (
+        <p className="mt-3 text-zinc-500">
+          Iniciá sesión para empezar a llenar tu carrito y guardar tus
+          productos favoritos.
+        </p>
+      )}
 
+      <Link
+        to={isAuthenticated ? "/catalogo" : "/login"}
+        className="mt-8 inline-flex bg-[#ba203f] px-8 py-4 font-sans text-sm font-semibold uppercase tracking-wide text-white hover:brightness-110"
+      >
+        {isAuthenticated ? "Ir al catálogo" : "Iniciar sesión"}
+      </Link>
+    </div>
+  );
+}
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-8 pb-24 pt-32 font-sans">
       <div className="mb-12 flex flex-col gap-2">

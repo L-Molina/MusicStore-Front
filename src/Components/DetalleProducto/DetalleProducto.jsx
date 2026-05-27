@@ -3,9 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart.js'
 import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
 import './DetalleProducto.css'
+import { useAuth } from '../../context/AuthContext'
 import { getProductImageUrl } from "../../utils/images"
 
 export default function DetalleProducto() {
+const { isAuthenticated } = useAuth()
 
   const { id } = useParams()
     const productId = Number(id)
@@ -23,7 +25,7 @@ const quantityInCart = productInCart?.quantity || 0
 const stockDisponible = (product?.stock || 0) - quantityInCart
 
 const outOfStock = stockDisponible <= 0
-
+const disabledCart = outOfStock || !isAuthenticated
 useEffect(() => {
   const fetchProduct = async () => {
     try {
@@ -194,12 +196,12 @@ if (!product) {
         <div className="flex h-[56px] border border-[#333333] bg-[#1A1A1A]">
           <button
             type="button"
-            disabled={outOfStock}
+            disabled={disabledCart}
             onClick={() =>
   setQty((q) => String(Math.max(Number(q) - 1, 1)))
 }
             className={`flex flex-1 items-center justify-center text-white
-  ${outOfStock
+  ${disabledCart
     ? 'cursor-not-allowed opacity-50'
     : 'hover:bg-[#222222]'
   }`}
@@ -209,7 +211,7 @@ if (!product) {
 
           <input
   type="text"
-  disabled={outOfStock}
+  disabled={disabledCart}
   className="w-14 bg-transparent text-center font-semibold text-white outline-none disabled:opacity-50"
   value={qty}
   onChange={(e) => {
@@ -232,17 +234,17 @@ if (!product) {
 
           <button
             type="button"
-            disabled={outOfStock}
+            disabled={disabledCart}
            onClick={() =>
   setQty((q) =>
     String(Math.min(Number(q) + 1, stockDisponible))
   )
 }
             className={`flex flex-1 items-center justify-center text-white
-  ${outOfStock
-    ? 'cursor-not-allowed opacity-50'
-    : 'hover:bg-[#222222]'
-  }`}
+  ${disabledCart
+  ? 'cursor-not-allowed opacity-50'
+  : 'hover:bg-[#222222]'
+}`}
           >
             <MaterialSymbol className="text-sm">add</MaterialSymbol>
           </button>
@@ -251,12 +253,12 @@ if (!product) {
   
     <button
   type="button"
-  disabled={outOfStock}
+  disabled={disabledCart}
   className={`mt-[22px] flex min-h-[56px] flex-[3] basis-[200px] items-center justify-center gap-2 px-8 font-semibold uppercase tracking-wide text-white transition-all active:scale-95
-    ${outOfStock
-      ? 'bg-gray-600 cursor-not-allowed opacity-60'
-      : 'bg-[#ba203f] hover:bg-[#8f1a35]'
-    }`
+    ${disabledCart
+  ? 'bg-gray-600 cursor-not-allowed opacity-60'
+  : 'bg-[#ba203f] hover:bg-[#8f1a35]'
+}`
   }
   onClick={() => {
     if (outOfStock) return
@@ -264,8 +266,17 @@ if (!product) {
   }}
 >
   <MaterialSymbol>shopping_cart</MaterialSymbol>
-  {product.stock === 0 ? 'Sin stock' : 'Añadir al carrito'}
+  {
+  product.stock === 0
+    ? 'Sin stock'
+    : 'Añadir al carrito'
+}
 </button>
+{!isAuthenticated && product.stock > 0 && (
+  <p className="mt-2 text-sm text-yellow-400">
+    Debés iniciar sesión para agregar productos al carrito.
+  </p>
+)}
     {outOfStock && (
   <div className="mt-2">
     {product.stock > 0 && (
