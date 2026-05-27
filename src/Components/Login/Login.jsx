@@ -47,11 +47,9 @@ export default function Login() {
 
       const data = await login(email, password, remember);
 
-      if(data.user.rol === "ADMIN"){
-        navigate("/admin");
-      }else {
+      
         navigate("/");
-      }
+      
       
     } catch (err) {
       setError(err.message);

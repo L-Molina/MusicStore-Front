@@ -1,5 +1,6 @@
   import { useCallback, useEffect, useMemo, useState } from 'react'
   import { CartContext } from './cart-context.js'
+  import { useAuth } from '../context/AuthContext'
 
 async function mapCartItems(carrito) {
   const items = carrito?.items ?? []
@@ -35,8 +36,9 @@ async function mapCartItems(carrito) {
 }
 
   export function CartProvider({ children }) {
-    const user = JSON.parse(localStorage.getItem('user'))
+      const { user } = useAuth()
 const usuarioId = user?.id
+   
     const [items, setItems] = useState([])
 
   const loadCart = useCallback(async () => {
@@ -61,7 +63,7 @@ setItems(mapped)
     } catch (err) {
       console.error('Error cargando carrito:', err)
     }
-  }, [])
+  }, [usuarioId])
 
   const addItem = useCallback(async (product, qty = 1) => {
     try {
@@ -88,7 +90,7 @@ setItems(mapped)
     } catch (err) {
       console.error('Error agregando producto:', err)
     }
-  }, [])
+  }, [usuarioId])
 
   const removeItem = useCallback(async (itemId) => {
     try {
@@ -110,7 +112,7 @@ setItems(mapped)
     } catch (err) {
       console.error('Error eliminando item:', err)
     }
-  }, [])
+  }, [usuarioId])
 
   const setQuantity = useCallback(async (itemId, quantity) => {
     try {
@@ -143,9 +145,9 @@ setItems(mapped)
     } catch (err) {
       console.error('Error actualizando cantidad:', err)
     }
-  }, [removeItem])
+  }, [removeItem,usuarioId])
 
-    const clear = useCallback(() => setItems([]), [])
+    const clear = useCallback(() => setItems([]), [usuarioId])
 
   const total = useMemo(
     () =>
@@ -176,8 +178,13 @@ setItems(mapped)
       [items, addItem, removeItem, setQuantity, clear, total, count],
     )
   useEffect(() => {
-    loadCart()
-  }, [loadCart])
+  if (!usuarioId) {
+    setItems([])
+    return
+  }
+
+  loadCart()
+}, [loadCart, usuarioId])
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>
   }

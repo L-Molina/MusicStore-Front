@@ -9,6 +9,7 @@ export default function NavBar() {
   const { count } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
 const isSeller = user?.rol === "VENDEDOR";
+const isAdmin = user?.rol === "ADMIN";
 
   return (
     <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans text-sm font-medium tracking-wide text-[#ba203f]">
@@ -41,6 +42,14 @@ const isSeller = user?.rol === "VENDEDOR";
     className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
   >
     Mis productos
+  </Link>
+)}
+{isAdmin && (
+  <Link
+    to="/admin"
+    className="hidden text-xs font-semibold uppercase tracking-wide text-[#ba203f] hover:text-white lg:inline"
+  >
+    Administracion
   </Link>
 )}
         </div>
