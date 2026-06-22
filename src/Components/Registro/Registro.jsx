@@ -277,23 +277,7 @@ export default function registro() {
               </select>
             </div>
 
-            {/* Recordarme */}
-            <label
-              htmlFor={remId}
-              className="flex items-center gap-2.5 cursor-pointer select-none"
-            >
-              <input
-                id={remId}
-                type="checkbox"
-                className="registro-checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                disabled={loading}
-              />
-              <span className="text-[12px] font-medium text-zinc-400">
-                Mantener sesión iniciada
-              </span>
-            </label>
+            
 
             {/* Botón principal */}
             <button

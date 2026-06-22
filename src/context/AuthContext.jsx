@@ -39,10 +39,10 @@ export function AuthProvider({ children }) {
     setUser(data.user);
     setToken(data.token);
 
-    if (remember) {
+    
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-    }
+    
 
     return data;
   }
@@ -65,11 +65,9 @@ export function AuthProvider({ children }) {
     setUser(data.user);
     setToken(data.token);
 
-    if (remember) {
+    
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-    }
-
     return data;
   }
 

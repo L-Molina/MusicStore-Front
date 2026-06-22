@@ -126,9 +126,7 @@ export default function Login() {
                 >
                   Contraseña
                 </label>
-                <a href="#" className="login-forgot">
-                  ¿Olvidaste tu contraseña?
-                </a>
+                
               </div>
               <div className="login-input-wrapper relative">
                 <MaterialSymbol className="login-input-icon material-symbols-outlined">
@@ -163,22 +161,8 @@ export default function Login() {
               </div>
             </div>
 
-            <label
-              htmlFor={remId}
-              className="flex items-center gap-2.5 cursor-pointer select-none"
-            >
-              <input
-                id={remId}
-                type="checkbox"
-                className="login-checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                disabled={loading}
-              />
-              <span className="text-[12px] font-medium text-zinc-400">
-                Mantener sesión iniciada
-              </span>
-            </label>
+            
+                
 
             <button
               type="submit"
