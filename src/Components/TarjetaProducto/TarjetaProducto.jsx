@@ -23,7 +23,7 @@ export default function TarjetaProducto({ product }) {
           e.stopPropagation();
           toggleFavorite(product);
         }}
-        className="favorite-btn absolute right-4 top-4 z-10 text-2xl"
+        className="favorite-btn absolute right-4 top-4 z-20 text-2xl"
         title="Agregar a favoritos"
       >
         {fav ? "❤️" : "🤍"}
@@ -34,6 +34,12 @@ export default function TarjetaProducto({ product }) {
         className="group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]"
       >
         <div className="relative mb-4 h-64 overflow-hidden bg-black">
+          {discount > 0 && (
+            <div className="absolute left-2 top-2 z-10 rounded bg-[#ba203f] px-2 py-1 text-xs font-bold text-white shadow-lg">
+              -{discount}%
+            </div>
+          )}
+
           <img
             src={getProductImageUrl(product)}
             alt={product.name}
