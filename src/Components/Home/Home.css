@@ -78,3 +78,29 @@
     transform: translateX(-50%);
   }
 }
+.promo-bar {
+  background: #ba203f;
+  color: white;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 10px 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+}
+
+.promo-track {
+  display: inline-block;
+  animation: promoScroll 25s linear infinite;
+}
+
+@keyframes promoScroll {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}

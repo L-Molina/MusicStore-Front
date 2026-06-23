@@ -30,6 +30,12 @@ export default function Home() {
 
   return (
     <>
+    <div className="promo-bar">
+  <div className="promo-track">
+    🚚 ENVÍOS A TODO EL PAÍS • 🎸 GUITARRAS PREMIUM • 🔥 HASTA 20% OFF • 🎧 AUDIO PROFESIONAL • 💿 VINILOS EXCLUSIVOS •
+    🚚 ENVÍOS A TODO EL PAÍS • 🎸 GUITARRAS PREMIUM • 🔥 HASTA 20% OFF • 🎧 AUDIO PROFESIONAL • 💿 VINILOS EXCLUSIVOS •
+  </div>
+</div>
       <header className="relative flex h-[min(870px,90vh)] w-full items-center overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
           <img alt="" className="size-full object-cover opacity-60" src={guitarAmpBg} />
