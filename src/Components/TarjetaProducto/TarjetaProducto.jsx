@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { getProductImageUrl } from "../../utils/images";
+import { useFavorites } from "../../context/FavoritesProvider";
 import "./TarjetaProducto.css";
 
 function money(value) {
@@ -52,58 +53,78 @@ function getFinalPrice(product) {
 }
 
 export default function TarjetaProducto({ product }) {
+  const { toggleFavorite, isFavorite } = useFavorites();
+
   const price = Number(product.price || 0);
   const discountAmount = getDiscountAmount(product);
   const discountPercent = getDiscountPercent(product);
   const finalPrice = getFinalPrice(product);
   const hasDiscount = discountAmount > 0;
+  const fav = isFavorite(product.id);
 
   return (
-    <Link
-      to={`/producto/${product.id}`}
-      className="group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]"
-    >
-      <div className="relative mb-4 h-64 overflow-hidden bg-black">
-        <img
-          src={getProductImageUrl(product)}
-          alt={product.name}
-          className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-110"
-        />
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleFavorite(product);
+        }}
+        className="favorite-btn absolute right-4 top-4 z-20 text-2xl"
+        title={fav ? "Quitar de favoritos" : "Agregar a favoritos"}
+      >
+        {fav ? "❤️" : "🤍"}
+      </button>
 
-        {hasDiscount && (
-          <span className="absolute left-3 top-3 rounded bg-[#ba203f] px-2 py-1 text-xs font-bold text-white">
-            {discountPercent}% OFF
-          </span>
-        )}
-      </div>
-
-      <h3 className="mb-1 font-sans text-sm font-semibold text-white group-hover:text-[#ba203f] md:text-base">
-        {product.name}
-      </h3>
-
-      {product.catalogSubtitle && (
-        <p className="mb-4 text-xs text-gray-500">{product.catalogSubtitle}</p>
-      )}
-
-      <div className="mt-auto border-t border-[#222] pt-3">
-        <div className="flex min-h-[58px] flex-col justify-start">
-          <span className="font-sans font-bold text-white">
-            {money(hasDiscount ? finalPrice : price)}
-          </span>
+      <Link
+        to={`/producto/${product.id}`}
+        className="group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]"
+      >
+        <div className="relative mb-4 h-64 overflow-hidden bg-black">
+          <img
+            src={getProductImageUrl(product)}
+            alt={product.name}
+            className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-110"
+          />
 
           {hasDiscount && (
-            <>
-              <span className="text-gray-400 line-through opacity-70">
-                {money(price)}
-              </span>
-
-              <span className="text-xs text-[#ba203f]">
-                Ahorrás {money(discountAmount)}
-              </span>
-            </>
+            <span className="absolute left-3 top-3 rounded bg-[#ba203f] px-2 py-1 text-xs font-bold text-white">
+              {discountPercent}% OFF
+            </span>
           )}
         </div>
-      </div>
-    </Link>
+
+        <h3 className="mb-1 font-sans text-sm font-semibold text-white group-hover:text-[#ba203f] md:text-base">
+          {product.name}
+        </h3>
+
+        {product.catalogSubtitle && (
+          <p className="mb-4 text-xs text-gray-500">
+            {product.catalogSubtitle}
+          </p>
+        )}
+
+        <div className="mt-auto border-t border-[#222] pt-3">
+          <div className="flex min-h-[58px] flex-col justify-start">
+            <span className="font-sans font-bold text-white">
+              {money(hasDiscount ? finalPrice : price)}
+            </span>
+
+            {hasDiscount && (
+              <>
+                <span className="text-gray-400 line-through opacity-70">
+                  {money(price)}
+                </span>
+
+                <span className="text-xs text-[#ba203f]">
+                  Ahorrás {money(discountAmount)}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </Link>
+    </div>
   );
 }
