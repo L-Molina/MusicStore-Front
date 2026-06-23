@@ -23,7 +23,7 @@ export default function TarjetaProducto({ product }) {
           e.stopPropagation();
           toggleFavorite(product);
         }}
-        className="absolute right-4 top-4 z-10 text-2xl"
+        className="favorite-btn absolute right-4 top-4 z-10 text-2xl"
         title="Agregar a favoritos"
       >
         {fav ? "❤️" : "🤍"}
