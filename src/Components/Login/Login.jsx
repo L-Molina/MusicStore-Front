@@ -7,15 +7,14 @@ import { useAuth } from "../../context/AuthContext";
 import "./Login.css";
 
 export default function Login() {
-  const { login} = useAuth();
+  const { login } = useAuth();
 
   const emailId = useId();
   const passId = useId();
-  const remId = useId();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember] = useState(true);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,12 +44,11 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const data = await login(email, password, remember);
+      await login(email, password, remember);
 
-      
-        navigate("/");
-      
-      
+      localStorage.removeItem("logoutMessage");
+
+      navigate("/");
     } catch (err) {
       setError(err.message);
       setShakeKey((k) => k + 1);
@@ -74,12 +72,12 @@ export default function Login() {
             Iniciar Sesión
           </p>
         </header>
+
         <section
           className="login-card rounded-lg p-8"
           key={shakeKey}
           style={shakeKey > 0 ? { animation: "shake 0.4s ease" } : undefined}
         >
-          {" "}
           {error && (
             <div
               role="alert"
@@ -91,6 +89,7 @@ export default function Login() {
               <p className="text-[13px] text-[#e2e2e2]">{error}</p>
             </div>
           )}
+
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div className="flex flex-col gap-1.5">
               <label
@@ -99,10 +98,12 @@ export default function Login() {
               >
                 Correo electrónico
               </label>
+
               <div className="login-input-wrapper relative">
                 <MaterialSymbol className="login-input-icon material-symbols-outlined">
                   mail
                 </MaterialSymbol>
+
                 <input
                   id={emailId}
                   type="email"
@@ -118,6 +119,7 @@ export default function Login() {
                 />
               </div>
             </div>
+
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label
@@ -126,12 +128,13 @@ export default function Login() {
                 >
                   Contraseña
                 </label>
-                
               </div>
+
               <div className="login-input-wrapper relative">
                 <MaterialSymbol className="login-input-icon material-symbols-outlined">
                   lock
                 </MaterialSymbol>
+
                 <input
                   id={passId}
                   type={showPass ? "text" : "password"}
@@ -146,6 +149,7 @@ export default function Login() {
                   style={{ paddingRight: "44px" }}
                   disabled={loading}
                 />
+
                 <button
                   type="button"
                   aria-label={
@@ -160,9 +164,6 @@ export default function Login() {
                 </button>
               </div>
             </div>
-
-            
-                
 
             <button
               type="submit"
@@ -183,8 +184,6 @@ export default function Login() {
               )}
             </button>
           </form>
-          
-          
         </section>
 
         <footer className="mt-8 text-center">
@@ -194,6 +193,7 @@ export default function Login() {
               <span className="registro-link">Registrate gratis</span>
             </Link>
           </p>
+
           <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-500">
             Al iniciar sesión aceptás nuestros Términos de Servicio y Política
             de Privacidad. MusicStore es una plataforma profesional de audio.

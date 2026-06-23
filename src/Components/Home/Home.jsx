@@ -1,27 +1,58 @@
-import { Link } from 'react-router-dom'
-import guitarAmpBg from '../../assets/guitar-amp-bg.jpg'
-import './Home.css'
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import guitarAmpBg from "../../assets/guitar-amp-bg.jpg";
+import "./Home.css";
 
 export default function Home() {
+  const [logoutMessage, setLogoutMessage] = useState("");
+
+  useEffect(() => {
+    const message = localStorage.getItem("logoutMessage");
+
+    if (message) {
+      setLogoutMessage(message);
+
+      localStorage.removeItem("logoutMessage");
+
+      setTimeout(() => {
+        setLogoutMessage("");
+      }, 3000);
+    }
+  }, []);
+
   return (
     <>
       <header className="relative flex h-[min(870px,90vh)] w-full items-center overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
-          <img alt="" className="size-full object-cover opacity-60" src={guitarAmpBg} />
+          <img
+            alt=""
+            className="size-full object-cover opacity-60"
+            src={guitarAmpBg}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
+
         <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8">
+          {logoutMessage && (
+            <div className="mb-6 max-w-md rounded-lg border border-green-600 bg-green-900/40 px-4 py-3 text-green-300 shadow-lg">
+              {logoutMessage}
+            </div>
+          )}
+
           <div className="max-w-2xl">
             <span className="mb-4 block font-sans text-sm font-semibold uppercase tracking-[0.15em] text-[#ba203f]">
               EQUIPAMIENTO DE ÉLITE
             </span>
+
             <h1 className="home-hero-title mb-6 font-sans font-extrabold uppercase tracking-tighter text-white">
               La Precisión del Sonido Puro.
             </h1>
+
             <p className="mb-8 max-w-lg font-sans text-lg font-normal leading-relaxed text-[#c8c6c5]">
-              Explora nuestra colección curada de instrumentos y herramientas de audio para el músico
-              profesional contemporáneo.
+              Explora nuestra colección curada de instrumentos y herramientas de
+              audio para el músico profesional contemporáneo.
             </p>
+
             <div className="flex flex-wrap gap-4">
               <Link
                 to="/catalogo"
@@ -33,8 +64,6 @@ export default function Home() {
           </div>
         </div>
       </header>
-
-      
     </>
-  )
+  );
 }

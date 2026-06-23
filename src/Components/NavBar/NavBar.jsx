@@ -14,6 +14,12 @@ export default function NavBar() {
   const isSeller = user?.rol === "VENDEDOR";
   const isAdmin = user?.rol === "ADMIN";
 
+  function handleLogout() {
+    localStorage.setItem("logoutMessage", "✅ Sesión cerrada correctamente");
+    logout();
+    window.location.href = "/";
+  }
+
   return (
     <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans text-sm font-medium tracking-wide text-[#ba203f]">
       <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-8 py-4">
@@ -55,7 +61,7 @@ export default function NavBar() {
         </div>
 
         <div className="flex items-center gap-6">
-          {isAuthenticated && !isAdmin && (
+          {isAuthenticated && user?.rol === "COMPRADOR" && (
             <Link
               to="/favoritos"
               className="relative flex items-center gap-2 text-[#ba203f] transition-colors hover:text-white"
@@ -100,7 +106,7 @@ export default function NavBar() {
               </span>
 
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="flex items-center gap-2 text-[#ba203f] hover:text-white"
                 title="Cerrar sesión"
               >
@@ -112,7 +118,9 @@ export default function NavBar() {
               to="/login"
               className="flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
             >
-              <span className="hidden uppercase lg:block">Iniciar sesión</span>
+              <span className="hidden uppercase lg:block">
+                Iniciar sesión
+              </span>
               <MaterialSymbol>person</MaterialSymbol>
             </Link>
           )}

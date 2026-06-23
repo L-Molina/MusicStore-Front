@@ -2,9 +2,13 @@ import { Link } from "react-router-dom";
 import "./TarjetaProducto.css";
 import { getProductImageUrl } from "../../utils/images";
 import { useFavorites } from "../../context/FavoritesProvider";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TarjetaProducto({ product }) {
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { user } = useAuth();
+
+  const isBuyer = user?.rol === "COMPRADOR";
 
   const price = Number(product.price ?? 0);
   const discount = Number(product.discount ?? 0);
@@ -16,18 +20,20 @@ export default function TarjetaProducto({ product }) {
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggleFavorite(product);
-        }}
-        className="favorite-btn absolute right-4 top-4 z-20 text-2xl"
-        title="Agregar a favoritos"
-      >
-        {fav ? "❤️" : "🤍"}
-      </button>
+      {isBuyer && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(product);
+          }}
+          className="favorite-btn absolute right-4 top-4 z-20 text-2xl"
+          title="Agregar a favoritos"
+        >
+          {fav ? "❤️" : "🤍"}
+        </button>
+      )}
 
       <Link
         to={`/producto/${product.id}`}
