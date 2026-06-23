@@ -2,11 +2,13 @@ import { Link } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../hooks/useCart";
+import { useFavorites } from "../../context/FavoritesProvider";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./NavBar.css";
 
 export default function NavBar() {
   const { count } = useCart();
+  const { favorites } = useFavorites();
   const { isAuthenticated, user, logout } = useAuth();
 
   const isSeller = user?.rol === "VENDEDOR";
@@ -15,7 +17,6 @@ export default function NavBar() {
   return (
     <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans text-sm font-medium tracking-wide text-[#ba203f]">
       <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-8 py-4">
-        {/* IZQUIERDA */}
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center">
             <img
@@ -53,9 +54,23 @@ export default function NavBar() {
           )}
         </div>
 
-        {/* DERECHA */}
         <div className="flex items-center gap-6">
-          {/* CARRITO: no lo mostramos para admin */}
+          {isAuthenticated && !isAdmin && (
+            <Link
+              to="/favoritos"
+              className="relative flex items-center gap-2 text-[#ba203f] transition-colors hover:text-white"
+              title="Favoritos"
+            >
+              <span className="text-xl">❤️</span>
+
+              {favorites.length > 0 && (
+                <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-[#ba203f] text-[10px] font-bold text-white">
+                  {favorites.length > 10 ? "10+" : favorites.length}
+                </span>
+              )}
+            </Link>
+          )}
+
           {!isAdmin && (
             <Link
               to="/carrito"
@@ -71,7 +86,6 @@ export default function NavBar() {
             </Link>
           )}
 
-          {/* LOGIN / USER */}
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
               <Link
@@ -98,9 +112,7 @@ export default function NavBar() {
               to="/login"
               className="flex items-center gap-3 text-[#ba203f] transition-colors hover:text-white"
             >
-              <span className="hidden uppercase lg:block">
-                Iniciar sesión
-              </span>
+              <span className="hidden uppercase lg:block">Iniciar sesión</span>
               <MaterialSymbol>person</MaterialSymbol>
             </Link>
           )}

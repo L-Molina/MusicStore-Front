@@ -4,6 +4,7 @@ import Carrito from "./Components/Carrito/Carrito";
 import Catalogo from "./Components/Catalogo/Catalogo";
 import Checkout from "./Components/Checkout/Checkout";
 import DetalleProducto from "./Components/DetalleProducto/DetalleProducto";
+import Favoritos from "./Components/Favoritos/Favoritos";
 import Home from "./Components/Home/Home";
 import Layout from "./Components/Layout/Layout";
 import Login from "./Components/Login/Login";
@@ -29,6 +30,15 @@ export default function App() {
           <Route path="carrito" element={<Carrito />} />
 
           <Route
+            path="favoritos"
+            element={
+              <ProtectedRoute allowedRoles={["COMPRADOR"]}>
+                <Favoritos />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="checkout"
             element={
               <ProtectedRoute>
@@ -50,7 +60,6 @@ export default function App() {
 
           <Route path="registro" element={<Registro />} />
 
-          {/* VENDEDOR: gestión de inventario propio */}
           <Route
             path="vendedor"
             element={
@@ -60,7 +69,6 @@ export default function App() {
             }
           />
 
-          {/* ADMIN: dashboard administrativo general */}
           <Route
             path="admin"
             element={
