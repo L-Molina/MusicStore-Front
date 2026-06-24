@@ -1,82 +1,109 @@
 import { Link } from "react-router-dom";
-import "./TarjetaProducto.css";
 import { getProductImageUrl } from "../../utils/images";
-import { useFavorites } from "../../context/FavoritesProvider";
-import { useAuth } from "../../context/AuthContext";
+import "./TarjetaProducto.css";
+
+function money(value) {
+  const number = Number(value || 0);
+
+  return `$${number.toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function getDiscountAmount(product) {
+  const price = Number(product?.price || 0);
+
+  if (!price) return 0;
+
+  if (product?.discountAmount !== undefined) {
+    return Math.min(Number(product.discountAmount || 0), price);
+  }
+
+  if (product?.descuento !== undefined) {
+    return Math.min(Number(product.descuento || 0), price);
+  }
+
+  const discountPercent = Number(product?.discount || 0);
+
+  if (!discountPercent || discountPercent < 0) return 0;
+
+  if (discountPercent <= 100) {
+    return Math.min((price * discountPercent) / 100, price);
+  }
+
+  return 0;
+}
+
+function getDiscountPercent(product) {
+  const price = Number(product?.price || 0);
+  const discountAmount = getDiscountAmount(product);
+
+  if (!price || !discountAmount) return 0;
+
+  return Math.round((discountAmount / price) * 100);
+}
+
+function getFinalPrice(product) {
+  const price = Number(product?.price || 0);
+  const discountAmount = getDiscountAmount(product);
+
+  return Math.max(price - discountAmount, 0);
+}
 
 export default function TarjetaProducto({ product }) {
-  const { toggleFavorite, isFavorite } = useFavorites();
-  const { user } = useAuth();
-
-  const isBuyer = user?.rol === "COMPRADOR";
-
-  const price = Number(product.price ?? 0);
-  const discount = Number(product.discount ?? 0);
-
-  const discountedPrice =
-    discount > 0 ? price * (1 - discount / 100) : price;
-
-  const fav = isFavorite(product.id);
+  const price = Number(product.price || 0);
+  const discountAmount = getDiscountAmount(product);
+  const discountPercent = getDiscountPercent(product);
+  const finalPrice = getFinalPrice(product);
+  const hasDiscount = discountAmount > 0;
 
   return (
-    <div className="relative">
-      {isBuyer && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleFavorite(product);
-          }}
-          className="favorite-btn absolute right-4 top-4 z-20 text-2xl"
-          title="Agregar a favoritos"
-        >
-          {fav ? "❤️" : "🤍"}
-        </button>
+    <Link
+      to={`/producto/${product.id}`}
+      className="group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]"
+    >
+      <div className="relative mb-4 h-64 overflow-hidden bg-black">
+        <img
+          src={getProductImageUrl(product)}
+          alt={product.name}
+          className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-110"
+        />
+
+        {hasDiscount && (
+          <span className="absolute left-3 top-3 rounded bg-[#ba203f] px-2 py-1 text-xs font-bold text-white">
+            {discountPercent}% OFF
+          </span>
+        )}
+      </div>
+
+      <h3 className="mb-1 font-sans text-sm font-semibold text-white group-hover:text-[#ba203f] md:text-base">
+        {product.name}
+      </h3>
+
+      {product.catalogSubtitle && (
+        <p className="mb-4 text-xs text-gray-500">{product.catalogSubtitle}</p>
       )}
 
-      <Link
-        to={`/producto/${product.id}`}
-        className="group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]"
-      >
-        <div className="relative mb-4 h-64 overflow-hidden bg-black">
-          {discount > 0 && (
-            <div className="absolute left-2 top-2 z-10 rounded bg-[#ba203f] px-2 py-1 text-xs font-bold text-white shadow-lg">
-              -{discount}%
-            </div>
-          )}
+      <div className="mt-auto border-t border-[#222] pt-3">
+        <div className="flex min-h-[58px] flex-col justify-start">
+          <span className="font-sans font-bold text-white">
+            {money(hasDiscount ? finalPrice : price)}
+          </span>
 
-          <img
-            src={getProductImageUrl(product)}
-            alt={product.name}
-            className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-110"
-          />
-        </div>
-
-        <h3 className="mb-1 font-sans text-sm font-semibold text-white md:text-base group-hover:text-[#ba203f]">
-          {product.name}
-        </h3>
-
-        {product.catalogSubtitle && (
-          <p className="mb-4 text-xs text-gray-500">
-            {product.catalogSubtitle}
-          </p>
-        )}
-
-        <div className="mt-auto border-t border-[#222] pt-3">
-          <div className="flex h-[48px] flex-col justify-start">
-            <span className="font-sans font-bold text-white">
-              ${(discount > 0 ? discountedPrice : price).toFixed(2)}
-            </span>
-
-            {discount > 0 && (
+          {hasDiscount && (
+            <>
               <span className="text-gray-400 line-through opacity-70">
-                ${price.toFixed(2)}
+                {money(price)}
               </span>
-            )}
-          </div>
+
+              <span className="text-xs text-[#ba203f]">
+                Ahorrás {money(discountAmount)}
+              </span>
+            </>
+          )}
         </div>
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 }

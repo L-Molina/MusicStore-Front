@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { QUESTION_PLACEHOLDER } from "../../utils/images";
 
 const API_URL = "http://localhost:8080";
 
@@ -39,7 +40,9 @@ function getDiscountPercent(product) {
 
 function getImage(product) {
   const file = product?.foto?.file;
-  if (!file) return "/logo_icon.png";
+
+  if (!file) return QUESTION_PLACEHOLDER;
+
   return `data:image/jpeg;base64,${file}`;
 }
 
