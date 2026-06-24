@@ -1,19 +1,14 @@
 import {
   AlertTriangle,
   BarChart3,
-  ImagePlus,
   Package,
-  Pencil,
   Plus,
-  Save,
   Search,
   ShoppingCart,
-  Trash2,
-  TrendingUp,
-  X,
+  TrendingUp
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useSelector } from "react-redux";
 import { QUESTION_PLACEHOLDER } from "../../utils/images";
 
 const API_URL = "http://localhost:8080";
@@ -79,11 +74,7 @@ function getItemProductId(item) {
   const product = item.producto || item.product || item;
 
   return String(
-    product.id ||
-      item.productoId ||
-      item.productId ||
-      item.id ||
-      ""
+    product.id || item.productoId || item.productId || item.id || ""
   );
 }
 
@@ -91,11 +82,7 @@ function getItemName(item) {
   const product = item.producto || item.product || item;
 
   return (
-    product.nombre ||
-    product.name ||
-    item.nombre ||
-    item.name ||
-    "Producto"
+    product.nombre || product.name || item.nombre || item.name || "Producto"
   );
 }
 
@@ -141,7 +128,7 @@ function normalizeOrder(order, source = "local") {
 }
 
 export default function VendedorPanel() {
-  const { token, user } = useAuth();
+  const { user, token } = useSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [products, setProducts] = useState([]);
@@ -486,8 +473,8 @@ export default function VendedorPanel() {
         await uploadProductImage(productId, productForm.image);
       }
 
-      await loadProducts();
-      await loadSellerOrders(products);
+      const loadedProducts = await loadProducts();
+      await loadSellerOrders(loadedProducts || []);
       closeProductModal();
 
       setMessage(
@@ -639,7 +626,6 @@ export default function VendedorPanel() {
         {activeTab === "dashboard" && (
           <Dashboard
             products={products}
-            stats={stats}
             onEdit={openEditProductModal}
             onDelete={deleteProduct}
             sellerOrders={sellerOrders}
@@ -872,426 +858,428 @@ function Inventory({
       </div>
     </div>
   );
-}
-
-function ProductTable({ products, onEdit, onDelete, compact }) {
-  return (
-    <table className="w-full min-w-[850px] text-left text-sm">
-      <thead className="bg-white/5 text-xs uppercase tracking-wide text-zinc-500">
-        <tr>
-          <th className="px-6 py-4">Producto</th>
-          <th className="px-6 py-4">Categoría</th>
-          <th className="px-6 py-4">Stock</th>
-          <th className="px-6 py-4">Precio</th>
-          <th className="px-6 py-4">Descuento</th>
-          <th className="px-6 py-4">Estado</th>
-          <th className="px-6 py-4 text-right">Acciones</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {products.map((product) => (
-          <tr key={product.id} className="border-t border-white/10">
-            <td className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={getImage(product)}
-                  alt={product.nombre}
-                  className="h-12 w-12 rounded-md object-cover"
-                />
-                <div>
-                  <p className="font-semibold text-white">{product.nombre}</p>
-                  <p className="max-w-xs truncate text-xs text-zinc-500">
-                    {product.descripcion}
-                  </p>
-                </div>
-              </div>
-            </td>
-
-            <td className="px-6 py-4 text-zinc-300">
-              {product.categoriaNombre}
-            </td>
-
-            <td className="px-6 py-4 text-zinc-300">
-              {product.stock} unidades
-            </td>
-
-            <td className="px-6 py-4 font-semibold text-white">
-              {money(product.precio)}
-            </td>
-
-            <td className="px-6 py-4">
-              {Number(product.descuento || 0) > 0 ? (
-                <div>
-                  <p className="font-semibold text-[#ba203f]">
-                    {getDiscountPercent(product)}%
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {money(product.descuento)} de descuento
-                  </p>
-                </div>
-              ) : (
-                <span className="text-zinc-500">Sin descuento</span>
-              )}
-            </td>
-
-            <td className="px-6 py-4">
-              {Number(product.stock) === 0 ? (
-                <span className="rounded bg-red-500/15 px-2 py-1 text-xs font-semibold text-red-300">
-                  Sin stock
-                </span>
-              ) : Number(product.stock) <= 3 ? (
-                <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
-                  Bajo stock
-                </span>
-              ) : Number(product.stock) > 20 ? (
-                <span className="rounded bg-blue-500/15 px-2 py-1 text-xs font-semibold text-blue-300">
-                  Mucho stock
-                </span>
-              ) : (
-                <span className="rounded bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-300">
-                  En venta
-                </span>
-              )}
-            </td>
-
-            <td className="px-6 py-4">
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => onEdit(product)}
-                  className="rounded-md border border-white/10 p-2 text-zinc-300 hover:bg-white/10 hover:text-white"
-                  title="Editar"
-                >
-                  <Pencil size={16} />
-                </button>
-
-                {!compact && (
-                  <button
-                    onClick={() => onDelete(product.id)}
-                    className="rounded-md border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10"
-                    title="Eliminar"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-            </td>
-          </tr>
-        ))}
-
-        {products.length === 0 && (
-          <tr>
-            <td colSpan="7" className="px-6 py-10 text-center text-zinc-500">
-              No tenés productos publicados todavía.
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
-}
-
-function SellerOrdersCompact({ orders }) {
-  if (orders.length === 0) {
+  function ProductTable({ products, onEdit, onDelete, compact }) {
     return (
-      <p className="px-6 py-8 text-sm text-zinc-500">
-        Todavía no hay pedidos asociados a tus productos.
-      </p>
+      <table className="w-full min-w-[850px] text-left text-sm">
+        <thead className="bg-white/5 text-xs uppercase tracking-wide text-zinc-500">
+          <tr>
+            <th className="px-6 py-4">Producto</th>
+            <th className="px-6 py-4">Categoría</th>
+            <th className="px-6 py-4">Stock</th>
+            <th className="px-6 py-4">Precio</th>
+            <th className="px-6 py-4">Descuento</th>
+            <th className="px-6 py-4">Estado</th>
+            <th className="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+  
+        <tbody>
+          {products.map((product) => (
+            <tr key={product.id} className="border-t border-white/10">
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={getImage(product)}
+                    alt={product.nombre}
+                    className="h-12 w-12 rounded-md object-cover"
+                  />
+  
+                  <div>
+                    <p className="font-semibold text-white">{product.nombre}</p>
+                    <p className="max-w-xs truncate text-xs text-zinc-500">
+                      {product.descripcion}
+                    </p>
+                  </div>
+                </div>
+              </td>
+  
+              <td className="px-6 py-4 text-zinc-300">
+                {product.categoriaNombre}
+              </td>
+  
+              <td className="px-6 py-4 text-zinc-300">
+                {product.stock} unidades
+              </td>
+  
+              <td className="px-6 py-4 font-semibold text-white">
+                {money(product.precio)}
+              </td>
+  
+              <td className="px-6 py-4">
+                {Number(product.descuento || 0) > 0 ? (
+                  <div>
+                    <p className="font-semibold text-[#ba203f]">
+                      {getDiscountPercent(product)}%
+                    </p>
+  
+                    <p className="text-xs text-zinc-500">
+                      {money(product.descuento)} de descuento
+                    </p>
+                  </div>
+                ) : (
+                  <span className="text-zinc-500">Sin descuento</span>
+                )}
+              </td>
+  
+              <td className="px-6 py-4">
+                {Number(product.stock) === 0 ? (
+                  <span className="rounded bg-red-500/15 px-2 py-1 text-xs font-semibold text-red-300">
+                    Sin stock
+                  </span>
+                ) : Number(product.stock) <= 3 ? (
+                  <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
+                    Bajo stock
+                  </span>
+                ) : Number(product.stock) > 20 ? (
+                  <span className="rounded bg-blue-500/15 px-2 py-1 text-xs font-semibold text-blue-300">
+                    Mucho stock
+                  </span>
+                ) : (
+                  <span className="rounded bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-300">
+                    En venta
+                  </span>
+                )}
+              </td>
+  
+              <td className="px-6 py-4">
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => onEdit(product)}
+                    className="rounded-md border border-white/10 p-2 text-zinc-300 hover:bg-white/10 hover:text-white"
+                    title="Editar"
+                  >
+                    <Pencil size={16} />
+                  </button>
+  
+                  {!compact && (
+                    <button
+                      onClick={() => onDelete(product.id)}
+                      className="rounded-md border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10"
+                      title="Eliminar"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+  
+          {products.length === 0 && (
+            <tr>
+              <td colSpan="7" className="px-6 py-10 text-center text-zinc-500">
+                No tenés productos publicados todavía.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     );
   }
-
-  return (
-    <div className="divide-y divide-white/10">
-      {orders.map((order) => (
-        <div key={`${order.id}-${order.sellerTotal}`} className="px-6 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-semibold">Pedido #{order.id}</p>
-              <p className="text-xs text-zinc-500">
-                {order.usuarioNombre || "Cliente"} · {formatDate(order.fecha)}
+  
+  function SellerOrdersCompact({ orders }) {
+    if (orders.length === 0) {
+      return (
+        <p className="px-6 py-8 text-sm text-zinc-500">
+          Todavía no hay pedidos asociados a tus productos.
+        </p>
+      );
+    }
+  
+    return (
+      <div className="divide-y divide-white/10">
+        {orders.map((order) => (
+          <div key={`${order.id}-${order.sellerTotal}`} className="px-6 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold">Pedido #{order.id}</p>
+                <p className="text-xs text-zinc-500">
+                  {order.usuarioNombre || "Cliente"} · {formatDate(order.fecha)}
+                </p>
+              </div>
+  
+              <p className="font-bold text-[#ba203f]">
+                {money(order.sellerTotal)}
               </p>
             </div>
-
-            <p className="font-bold text-[#ba203f]">
-              {money(order.sellerTotal)}
-            </p>
           </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SellerOrders({ orders }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-zinc-900/80">
-      <div className="border-b border-white/10 px-6 py-5">
-        <h2 className="text-xl font-bold">Pedidos recibidos</h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Pedidos de compradores que incluyen productos publicados por vos.
-        </p>
+        ))}
       </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="bg-white/5 text-xs uppercase tracking-wide text-zinc-500">
-            <tr>
-              <th className="px-6 py-4">Pedido</th>
-              <th className="px-6 py-4">Cliente</th>
-              <th className="px-6 py-4">Fecha</th>
-              <th className="px-6 py-4">Productos tuyos</th>
-              <th className="px-6 py-4">Total para vos</th>
-              <th className="px-6 py-4">Estado</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {orders.map((order) => (
-              <tr
-                key={`${order.id}-${order.sellerTotal}`}
-                className="border-t border-white/10"
-              >
-                <td className="px-6 py-4 font-semibold text-white">
-                  #{order.id}
-                </td>
-
-                <td className="px-6 py-4 text-zinc-300">
-                  <p>{order.usuarioNombre || "Cliente"}</p>
-                  <p className="text-xs text-zinc-500">
-                    {order.usuarioMail || "Sin email"}
-                  </p>
-                </td>
-
-                <td className="px-6 py-4 text-zinc-300">
-                  {formatDate(order.fecha)}
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="space-y-2">
-                    {order.sellerItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="rounded-md bg-black/40 px-3 py-2"
-                      >
-                        <p className="font-semibold text-white">
-                          {getItemName(item)}
-                        </p>
-                        <p className="text-xs text-zinc-500">
-                          Cantidad: {getItemQuantity(item)} · Precio unitario:{" "}
-                          {money(getItemUnitPrice(item))}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </td>
-
-                <td className="px-6 py-4 font-bold text-[#ba203f]">
-                  {money(order.sellerTotal)}
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
-                    {order.estado || "Procesando"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-
-            {orders.length === 0 && (
+    );
+  }
+  
+  function SellerOrders({ orders }) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-zinc-900/80">
+        <div className="border-b border-white/10 px-6 py-5">
+          <h2 className="text-xl font-bold">Pedidos recibidos</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Pedidos de compradores que incluyen productos publicados por vos.
+          </p>
+        </div>
+  
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-white/5 text-xs uppercase tracking-wide text-zinc-500">
               <tr>
-                <td colSpan="6" className="px-6 py-10 text-center text-zinc-500">
-                  Todavía no hay pedidos asociados a tus productos.
-                </td>
+                <th className="px-6 py-4">Pedido</th>
+                <th className="px-6 py-4">Cliente</th>
+                <th className="px-6 py-4">Fecha</th>
+                <th className="px-6 py-4">Productos tuyos</th>
+                <th className="px-6 py-4">Total para vos</th>
+                <th className="px-6 py-4">Estado</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+  
+            <tbody>
+              {orders.map((order) => (
+                <tr
+                  key={`${order.id}-${order.sellerTotal}`}
+                  className="border-t border-white/10"
+                >
+                  <td className="px-6 py-4 font-semibold text-white">
+                    #{order.id}
+                  </td>
+  
+                  <td className="px-6 py-4 text-zinc-300">
+                    <p>{order.usuarioNombre || "Cliente"}</p>
+                    <p className="text-xs text-zinc-500">
+                      {order.usuarioMail || "Sin email"}
+                    </p>
+                  </td>
+  
+                  <td className="px-6 py-4 text-zinc-300">
+                    {formatDate(order.fecha)}
+                  </td>
+  
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
+                      {order.sellerItems.map((item, index) => (
+                        <div
+                          key={index}
+                          className="rounded-md bg-black/40 px-3 py-2"
+                        >
+                          <p className="font-semibold text-white">
+                            {getItemName(item)}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            Cantidad: {getItemQuantity(item)} · Precio unitario:{" "}
+                            {money(getItemUnitPrice(item))}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+  
+                  <td className="px-6 py-4 font-bold text-[#ba203f]">
+                    {money(order.sellerTotal)}
+                  </td>
+  
+                  <td className="px-6 py-4">
+                    <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
+                      {order.estado || "Procesando"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+  
+              {orders.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="px-6 py-10 text-center text-zinc-500">
+                    Todavía no hay pedidos asociados a tus productos.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function ProductModal({
-  editingProduct,
-  productForm,
-  setProductForm,
-  categories,
-  closeProductModal,
-  saveProduct,
-}) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4">
-      <form
-        onSubmit={saveProduct}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-white/10 bg-zinc-950 p-6 shadow-2xl"
-      >
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold">
-              {editingProduct ? "Editar producto" : "Publicar producto"}
-            </h2>
-
-            <p className="mt-1 text-sm text-zinc-500">
-              Completá la información del producto.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={closeProductModal}
-            className="rounded-md p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="grid gap-4">
-          <label className="grid gap-2 text-sm">
-            Nombre
-            <input
-              required
-              value={productForm.nombre}
-              onChange={(e) =>
-                setProductForm({ ...productForm, nombre: e.target.value })
-              }
-              className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
-            />
-          </label>
-
-          <label className="grid gap-2 text-sm">
-            Descripción
-            <textarea
-              required
-              value={productForm.descripcion}
-              onChange={(e) =>
-                setProductForm({
-                  ...productForm,
-                  descripcion: e.target.value,
-                })
-              }
-              rows="4"
-              className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
-            />
-          </label>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm">
-              Precio
-              <input
-                required
-                type="number"
-                min="0"
-                step="0.01"
-                value={productForm.precio}
-                onChange={(e) =>
-                  setProductForm({ ...productForm, precio: e.target.value })
-                }
-                className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm">
-              Stock
-              <input
-                required
-                type="number"
-                min="0"
-                value={productForm.stock}
-                onChange={(e) =>
-                  setProductForm({ ...productForm, stock: e.target.value })
-                }
-                className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm">
-              Descuento en %
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={productForm.descuento}
-                onChange={(e) =>
-                  setProductForm({
-                    ...productForm,
-                    descuento: e.target.value,
-                  })
-                }
-                className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
-              />
-              <span className="text-xs text-zinc-500">
-                Escribí 10 para aplicar 10% de descuento.
-              </span>
-            </label>
-
-            <label className="grid gap-2 text-sm">
-              Categoría
-              <select
-                required
-                value={productForm.categoriaId}
-                onChange={(e) =>
-                  setProductForm({
-                    ...productForm,
-                    categoriaId: e.target.value,
-                  })
-                }
-                className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
-              >
-                <option value="">Seleccionar categoría</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <label className="grid gap-2 text-sm">
-            Imagen
-            <div className="flex items-center gap-3 rounded-md border border-dashed border-white/20 bg-black px-4 py-4">
-              <ImagePlus size={20} className="text-zinc-400" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  setProductForm({
-                    ...productForm,
-                    image: e.target.files?.[0] || null,
-                  })
-                }
-                className="text-sm text-zinc-400"
-              />
+    );
+  }
+  
+  function ProductModal({
+    editingProduct,
+    productForm,
+    setProductForm,
+    categories,
+    closeProductModal,
+    saveProduct,
+  }) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4">
+        <form
+          onSubmit={saveProduct}
+          className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-white/10 bg-zinc-950 p-6 shadow-2xl"
+        >
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold">
+                {editingProduct ? "Editar producto" : "Publicar producto"}
+              </h2>
+  
+              <p className="mt-1 text-sm text-zinc-500">
+                Completá la información del producto.
+              </p>
             </div>
-
-            {editingProduct && (
-              <span className="text-xs text-zinc-500">
-                Si no elegís una imagen nueva, queda la imagen actual.
-              </span>
-            )}
-          </label>
-        </div>
-
-        <div className="mt-8 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={closeProductModal}
-            className="rounded-md border border-white/10 px-5 py-3 text-sm font-semibold text-zinc-300 hover:bg-white/10"
-          >
-            Cancelar
-          </button>
-
-          <button
-            type="submit"
-            className="flex items-center gap-2 rounded-md bg-[#ba203f] px-5 py-3 text-sm font-semibold text-white hover:bg-red-700"
-          >
-            <Save size={16} />
-            Guardar
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+  
+            <button
+              type="button"
+              onClick={closeProductModal}
+              className="rounded-md p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+  
+          <div className="grid gap-4">
+            <label className="grid gap-2 text-sm">
+              Nombre
+              <input
+                required
+                value={productForm.nombre}
+                onChange={(e) =>
+                  setProductForm({ ...productForm, nombre: e.target.value })
+                }
+                className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
+              />
+            </label>
+  
+            <label className="grid gap-2 text-sm">
+              Descripción
+              <textarea
+                required
+                value={productForm.descripcion}
+                onChange={(e) =>
+                  setProductForm({
+                    ...productForm,
+                    descripcion: e.target.value,
+                  })
+                }
+                rows="4"
+                className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
+              />
+            </label>
+  
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm">
+                Precio
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={productForm.precio}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, precio: e.target.value })
+                  }
+                  className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
+                />
+              </label>
+  
+              <label className="grid gap-2 text-sm">
+                Stock
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  value={productForm.stock}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, stock: e.target.value })
+                  }
+                  className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
+                />
+              </label>
+            </div>
+  
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm">
+                Descuento en %
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={productForm.descuento}
+                  onChange={(e) =>
+                    setProductForm({
+                      ...productForm,
+                      descuento: e.target.value,
+                    })
+                  }
+                  className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
+                />
+                <span className="text-xs text-zinc-500">
+                  Escribí 10 para aplicar 10% de descuento.
+                </span>
+              </label>
+  
+              <label className="grid gap-2 text-sm">
+                Categoría
+                <select
+                  required
+                  value={productForm.categoriaId}
+                  onChange={(e) =>
+                    setProductForm({
+                      ...productForm,
+                      categoriaId: e.target.value,
+                    })
+                  }
+                  className="rounded-md border border-white/10 bg-black px-4 py-3 outline-none focus:border-[#ba203f]"
+                >
+                  <option value="">Seleccionar categoría</option>
+  
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+  
+            <label className="grid gap-2 text-sm">
+              Imagen
+              <div className="flex items-center gap-3 rounded-md border border-dashed border-white/20 bg-black px-4 py-4">
+                <ImagePlus size={20} className="text-zinc-400" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setProductForm({
+                      ...productForm,
+                      image: e.target.files?.[0] || null,
+                    })
+                  }
+                  className="text-sm text-zinc-400"
+                />
+              </div>
+  
+              {editingProduct && (
+                <span className="text-xs text-zinc-500">
+                  Si no elegís una imagen nueva, queda la imagen actual.
+                </span>
+              )}
+            </label>
+          </div>
+  
+          <div className="mt-8 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeProductModal}
+              className="rounded-md border border-white/10 px-5 py-3 text-sm font-semibold text-zinc-300 hover:bg-white/10"
+            >
+              Cancelar
+            </button>
+  
+            <button
+              type="submit"
+              className="flex items-center gap-2 rounded-md bg-[#ba203f] px-5 py-3 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              <Save size={16} />
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 }

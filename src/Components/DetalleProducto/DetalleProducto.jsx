@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { useCart } from "../../hooks/useCart.js";
+
+import { addCartItem } from "../../redux/cartSlice";
+import { fetchProductById } from "../../redux/productDetailSlice";
 import { getProductImageUrl } from "../../utils/images";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+
 import "./DetalleProducto.css";
 
 function money(value) {
@@ -15,19 +18,57 @@ function money(value) {
   })}`;
 }
 
+function normalizeProduct(product) {
+  if (!product) return null;
+
+  const price = Number(product.price ?? product.precio ?? 0);
+  const discountAmount = Math.min(
+    Number(product.discountAmount ?? product.descuento ?? 0),
+    price
+  );
+  const finalPrice = Math.max(price - discountAmount, 0);
+  const discountPercent =
+    price > 0 && discountAmount > 0
+      ? Math.round((discountAmount / price) * 100)
+      : 0;
+
+  return {
+    ...product,
+    id: product.id,
+    name: product.name ?? product.nombre ?? "Producto",
+    nombre: product.nombre ?? product.name ?? "Producto",
+    description: product.description ?? product.descripcion ?? "",
+    descripcion: product.descripcion ?? product.description ?? "",
+    price,
+    precio: price,
+    discountedPrice: finalPrice,
+    discountAmount,
+    discountPercent,
+    discount: discountPercent,
+    descuento: discountAmount,
+    stock: Number(product.stock || 0),
+    category:
+      product.category ??
+      product.categoria?.nombre ??
+      product.categoriaNombre ??
+      "Sin categoría",
+    categoryId: product.categoryId ?? product.categoria?.id,
+    fotos: product.fotos || [],
+    fotosIds: product.fotosIds || [],
+  };
+}
+
 function getDiscountAmount(product) {
-  const price = Number(product?.price || 0);
-  const discount = Number(product?.discountAmount || 0);
+  const price = Number(product?.price || product?.precio || 0);
+  const discount = Number(product?.discountAmount ?? product?.descuento ?? 0);
 
   if (!price || !discount || discount < 0) return 0;
 
-  // El backend guarda el descuento como MONTO, no como porcentaje.
-  // Ejemplo: precio 15000, descuento 1000 => precio final 14000.
   return Math.min(discount, price);
 }
 
 function getDiscountPercent(product) {
-  const price = Number(product?.price || 0);
+  const price = Number(product?.price || product?.precio || 0);
   const discountAmount = getDiscountAmount(product);
 
   if (!price || !discountAmount) return 0;
@@ -36,107 +77,63 @@ function getDiscountPercent(product) {
 }
 
 function getFinalPrice(product) {
-  const price = Number(product?.price || 0);
+  const price = Number(product?.price || product?.precio || 0);
   const discountAmount = getDiscountAmount(product);
 
   return Math.max(price - discountAmount, 0);
 }
 
 export default function DetalleProducto() {
-  const { isAuthenticated } = useAuth();
+  const dispatch = useDispatch();
 
   const { id } = useParams();
   const productId = Number(id);
 
-  const { addItem, items } = useCart();
+  const { token } = useSelector((state) => state.auth);
+  const { items } = useSelector((state) => state.cart);
+  const {
+    product: rawProduct,
+    loading,
+    error,
+  } = useSelector((state) => state.productDetail);
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const isAuthenticated = !!token;
+  const product = normalizeProduct(rawProduct);
+
   const [qty, setQty] = useState("1");
 
-  const productInCart = items.find((item) => item.id === product?.id);
-  const quantityInCart = productInCart?.quantity || 0;
+  const productInCart = items.find((item) => {
+    const itemProductId = item.id || item.productId || item.productoId;
+    return String(itemProductId) === String(product?.id);
+  });
 
-  const stockDisponible = Math.max((product?.stock || 0) - quantityInCart, 0);
+  const quantityInCart = Number(productInCart?.quantity || 0);
+  const stockDisponible = Math.max(Number(product?.stock || 0) - quantityInCart, 0);
 
   const outOfStock = stockDisponible <= 0;
   const disabledCart = outOfStock || !isAuthenticated;
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-
-        const res = await fetch(`http://localhost:8080/productos/${productId}`);
-
-        if (!res.ok) {
-          setProduct(null);
-          return;
-        }
-
-        const p = await res.json();
-
-        let fotos = [];
-
-        if (p.fotosIds?.length > 0) {
-          const fotoRes = await fetch(
-            `http://localhost:8080/fotos/${p.fotosIds[0]}`
-          );
-
-          if (fotoRes.ok) {
-            const fotoData = await fotoRes.json();
-            fotos = [fotoData];
-          }
-        }
-
-        const price = Number(p.precio || 0);
-        const discountAmount = Math.min(Number(p.descuento || 0), price);
-        const finalPrice = Math.max(price - discountAmount, 0);
-        const discountPercent =
-          price > 0 && discountAmount > 0
-            ? Math.round((discountAmount / price) * 100)
-            : 0;
-
-        const formatted = {
-          id: p.id,
-          name: p.nombre,
-          description: p.descripcion,
-          price,
-          discountedPrice: finalPrice,
-          discountAmount,
-          discountPercent,
-          discount: discountPercent,
-          descuento: discountAmount,
-          stock: p.stock,
-          category: p.categoria?.nombre ?? "Sin categoría",
-          categoryId: p.categoria?.id,
-          fotos,
-        };
-
-        setProduct(formatted);
-      } catch (err) {
-        console.error("Error trayendo producto:", err);
-        setProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [productId]);
+    dispatch(fetchProductById(productId));
+  }, [dispatch, productId]);
 
   useEffect(() => {
-    if (Number(qty) > stockDisponible) {
-      setQty(String(stockDisponible));
-    }
-
     if (stockDisponible <= 0) {
       setQty("1");
+      return;
+    }
+
+    if (Number(qty) > stockDisponible) {
+      setQty(String(stockDisponible));
     }
   }, [stockDisponible, qty]);
 
   if (loading) {
     return <div className="p-10 text-white">Cargando...</div>;
+  }
+
+  if (error) {
+    return <div className="p-10 text-white">Error: {error}</div>;
   }
 
   if (!product) {
@@ -147,6 +144,29 @@ export default function DetalleProducto() {
   const discountPercent = getDiscountPercent(product);
   const finalPrice = getFinalPrice(product);
   const hasDiscount = discountAmount > 0;
+
+  function handleAddToCart() {
+    if (disabledCart) return;
+
+    const safeQuantity = Math.min(
+      Math.max(Number(qty || 1), 1),
+      stockDisponible
+    );
+
+    dispatch(
+      addCartItem({
+        product: {
+          ...product,
+          price: product.price,
+          discountedPrice: finalPrice,
+          discount: discountPercent,
+          discountAmount,
+          descuento: discountAmount,
+        },
+        quantity: safeQuantity,
+      })
+    );
+  }
 
   return (
     <main className="mx-auto max-w-screen-2xl px-8 pb-24 pt-12 font-sans">
@@ -249,7 +269,7 @@ export default function DetalleProducto() {
                     type="button"
                     disabled={disabledCart}
                     onClick={() =>
-                      setQty((q) => String(Math.max(Number(q) - 1, 1)))
+                      setQty((q) => String(Math.max(Number(q || 1) - 1, 1)))
                     }
                     className={`flex flex-1 items-center justify-center text-white ${
                       disabledCart
@@ -261,6 +281,7 @@ export default function DetalleProducto() {
                   </button>
 
                   <input
+                    id={`qty-${product.id}`}
                     type="text"
                     disabled={disabledCart}
                     className="w-14 bg-transparent text-center font-semibold text-white outline-none disabled:opacity-50"
@@ -288,7 +309,7 @@ export default function DetalleProducto() {
                     disabled={disabledCart}
                     onClick={() =>
                       setQty((q) =>
-                        String(Math.min(Number(q) + 1, stockDisponible))
+                        String(Math.min(Number(q || 1) + 1, stockDisponible))
                       )
                     }
                     className={`flex flex-1 items-center justify-center text-white ${
@@ -310,21 +331,7 @@ export default function DetalleProducto() {
                     ? "cursor-not-allowed bg-gray-600 opacity-60"
                     : "bg-[#ba203f] hover:bg-[#8f1a35]"
                 }`}
-                onClick={() => {
-                  if (outOfStock) return;
-
-                  addItem(
-                    {
-                      ...product,
-                      price: product.price,
-                      discountedPrice: finalPrice,
-                      discount: discountPercent,
-                      discountAmount,
-                      descuento: discountAmount,
-                    },
-                    Math.min(Number(qty), stockDisponible)
-                  );
-                }}
+                onClick={handleAddToCart}
               >
                 <MaterialSymbol>shopping_cart</MaterialSymbol>
                 {product.stock === 0 ? "Sin stock" : "Añadir al carrito"}

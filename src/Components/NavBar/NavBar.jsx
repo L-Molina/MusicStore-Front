@@ -1,22 +1,34 @@
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
-import { useAuth } from "../../context/AuthContext";
-import { useCart } from "../../hooks/useCart";
 import { useFavorites } from "../../context/FavoritesProvider";
+import { logout } from "../../redux/authSlice";
+import { clearCart } from "../../redux/cartSlice";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./NavBar.css";
 
 export default function NavBar() {
-  const { count } = useCart();
-  const { favorites } = useFavorites();
-  const { isAuthenticated, user, logout } = useAuth();
+  const dispatch = useDispatch();
 
+  const { user, token } = useSelector((state) => state.auth);
+  const { items } = useSelector((state) => state.cart);
+
+  const { favorites } = useFavorites();
+
+  const count = items.reduce((acc, item) => {
+    return acc + Number(item.quantity || 0);
+  }, 0);
+
+  const isAuthenticated = !!token;
   const isSeller = user?.rol === "VENDEDOR";
   const isAdmin = user?.rol === "ADMIN";
+  const isBuyer = user?.rol === "COMPRADOR";
 
   function handleLogout() {
     localStorage.setItem("logoutMessage", "✅ Sesión cerrada correctamente");
-    logout();
+    dispatch(logout());
+    dispatch(clearCart());
     window.location.href = "/";
   }
 
@@ -61,7 +73,7 @@ export default function NavBar() {
         </div>
 
         <div className="flex items-center gap-6">
-          {isAuthenticated && user?.rol === "COMPRADOR" && (
+          {isAuthenticated && isBuyer && (
             <Link
               to="/favoritos"
               className="relative flex items-center gap-2 text-[#ba203f] transition-colors hover:text-white"
@@ -102,7 +114,7 @@ export default function NavBar() {
               </Link>
 
               <span className="hidden text-white lg:block">
-                Hola, {user?.nombre}
+                Hola, {user?.nombre || "usuario"}
               </span>
 
               <button

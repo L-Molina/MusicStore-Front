@@ -1,6 +1,12 @@
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { useCart } from "../../hooks/useCart.js";
+
+import {
+  fetchCart,
+  removeCartItem,
+  updateQuantity,
+} from "../../redux/cartSlice";
 import { getProductImageUrl } from "../../utils/images";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 
@@ -34,8 +40,24 @@ function money(value) {
   })}`;
 }
 
+function getItemId(item) {
+  return item.itemId || item.id || item.productId || item.productoId;
+}
+
+function getItemName(item) {
+  return item.name || item.nombre || item.producto?.nombre || "Producto";
+}
+
+function getItemStock(item) {
+  return Number(item.stock ?? item.producto?.stock ?? 999);
+}
+
+function getBasePrice(item) {
+  return Number(item.price ?? item.precio ?? item.producto?.precio ?? 0);
+}
+
 function getDiscountAmount(item) {
-  const price = Number(item?.price || 0);
+  const price = getBasePrice(item);
 
   if (!price) return 0;
 
@@ -49,6 +71,7 @@ function getDiscountAmount(item) {
 
   if (item?.discountedPrice !== undefined) {
     const discounted = Number(item.discountedPrice || 0);
+
     if (discounted >= 0 && discounted < price) {
       return price - discounted;
     }
@@ -64,7 +87,7 @@ function getDiscountAmount(item) {
 }
 
 function getFinalUnitPrice(item) {
-  const price = Number(item?.price || 0);
+  const price = getBasePrice(item);
   const discountAmount = getDiscountAmount(item);
 
   return Math.max(price - discountAmount, 0);
@@ -75,27 +98,75 @@ function getLineTotal(item) {
 }
 
 export default function Carrito() {
-  const { isAuthenticated } = useAuth();
-  const { items, removeItem, setQuantity } = useCart();
+  const dispatch = useDispatch();
 
-  const selectedShippingId =
-    localStorage.getItem("musicstore_shipping_method") || "estandar";
+  const { token } = useSelector((state) => state.auth);
+  const { items } = useSelector((state) => state.cart);
+
+  const isAuthenticated = !!token;
+
+  const [selectedShippingId, setSelectedShippingId] = useState(
+    localStorage.getItem("musicstore_shipping_method") || "estandar"
+  );
+
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchCart());
+    }
+  }, [token, dispatch]);
 
   const selectedShipping =
     SHIPPING_OPTIONS.find((option) => option.id === selectedShippingId) ||
     SHIPPING_OPTIONS[1];
 
-  const subtotalProductos = items.reduce(
-    (acc, item) => acc + getLineTotal(item),
-    0
-  );
+  const subtotalProductos = items.reduce((acc, item) => {
+    return acc + getLineTotal(item);
+  }, 0);
 
   const envio = items.length > 0 ? selectedShipping.price : 0;
   const granTotal = subtotalProductos + envio;
 
   function updateShipping(methodId) {
     localStorage.setItem("musicstore_shipping_method", methodId);
-    window.location.reload();
+    setSelectedShippingId(methodId);
+  }
+
+  function handleRemove(item) {
+    dispatch(removeCartItem(getItemId(item)));
+  }
+
+  function handleQuantityChange(item, quantity) {
+    const itemId = getItemId(item);
+    const stock = getItemStock(item);
+
+    const safeQuantity = Math.max(1, Math.min(Number(quantity || 1), stock));
+
+    dispatch(
+      updateQuantity({
+        itemId,
+        quantity: safeQuantity,
+      })
+    );
+  }
+
+  function handleDecrease(item) {
+    const currentQuantity = Number(item.quantity || 1);
+
+    if (currentQuantity <= 1) {
+      handleRemove(item);
+      return;
+    }
+
+    handleQuantityChange(item, currentQuantity - 1);
+  }
+
+  function handleIncrease(item) {
+    const currentQuantity = Number(item.quantity || 1);
+    const stock = getItemStock(item);
+
+    if (currentQuantity >= stock) return;
+
+    handleQuantityChange(item, currentQuantity + 1);
   }
 
   if (items.length === 0) {
@@ -135,6 +206,7 @@ export default function Carrito() {
         <h1 className="text-5xl font-extrabold uppercase tracking-tighter text-[#e2e2e2]">
           Tu carrito
         </h1>
+
         <p className="text-zinc-500">
           Revisá tus productos antes de finalizar la compra.
         </p>
@@ -143,6 +215,10 @@ export default function Carrito() {
       <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
           {items.map((item) => {
+            const itemId = getItemId(item);
+            const itemName = getItemName(item);
+            const stock = getItemStock(item);
+
             const unitPrice = getFinalUnitPrice(item);
             const discountAmount = getDiscountAmount(item);
             const lineTotal = getLineTotal(item);
@@ -150,14 +226,14 @@ export default function Carrito() {
 
             return (
               <div
-                key={item.itemId || item.id}
+                key={itemId}
                 className="group relative flex flex-col gap-6 rounded-lg border border-zinc-800 bg-[#1a1c1c] p-6 transition-all duration-300 hover:border-zinc-500 md:flex-row"
               >
                 <div className="h-40 w-full shrink-0 overflow-hidden rounded bg-zinc-900 md:w-40">
-                  <Link to={`/producto/${item.id}`}>
+                  <Link to={`/producto/${item.id || item.productId || item.productoId}`}>
                     <img
                       src={getProductImageUrl(item)}
-                      alt={item.name}
+                      alt={itemName}
                       className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </Link>
@@ -167,14 +243,19 @@ export default function Carrito() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <Link
-                        to={`/producto/${item.id}`}
+                        to={`/producto/${item.id || item.productId || item.productoId}`}
                         className="font-sans text-2xl font-bold text-[#e2e2e2]"
                       >
-                        {item.name}
+                        {itemName}
                       </Link>
 
                       <p className="mt-1 text-sm uppercase tracking-widest text-zinc-500">
-                        {item.cartLine ?? item.category?.nombre ?? item.category}
+                        {item.cartLine ??
+                          item.category?.nombre ??
+                          item.category ??
+                          item.categoriaNombre ??
+                          item.producto?.categoria?.nombre ??
+                          "Sin categoría"}
                       </p>
 
                       {hasDiscount && (
@@ -186,9 +267,9 @@ export default function Carrito() {
 
                     <button
                       type="button"
-                      aria-label={`Eliminar ${item.name}`}
+                      aria-label={`Eliminar ${itemName}`}
                       className="text-zinc-600 hover:text-[#ba203f]"
-                      onClick={() => removeItem(item.itemId)}
+                      onClick={() => handleRemove(item)}
                     >
                       <MaterialSymbol>delete</MaterialSymbol>
                     </button>
@@ -199,7 +280,7 @@ export default function Carrito() {
                       <button
                         type="button"
                         className="border-r border-zinc-800 px-3 py-1 text-zinc-400 hover:bg-zinc-800"
-                        onClick={() => setQuantity(item.itemId, item.quantity - 1)}
+                        onClick={() => handleDecrease(item)}
                       >
                         −
                       </button>
@@ -212,35 +293,25 @@ export default function Carrito() {
                           const value = e.target.value;
 
                           if (value === "") {
-                            setQuantity(item.itemId, 1);
+                            handleQuantityChange(item, 1);
                             return;
                           }
 
                           if (!/^\d+$/.test(value)) return;
 
-                          const cantidad = Math.max(
-                            1,
-                            Math.min(Number(value), item.stock)
-                          );
-
-                          setQuantity(item.itemId, cantidad);
+                          handleQuantityChange(item, Number(value));
                         }}
                       />
 
                       <button
                         type="button"
-                        disabled={item.quantity >= item.stock}
+                        disabled={Number(item.quantity || 1) >= stock}
                         className={`px-3 py-1 ${
-                          item.quantity >= item.stock
+                          Number(item.quantity || 1) >= stock
                             ? "cursor-not-allowed text-zinc-500 opacity-50"
                             : "text-zinc-400 hover:bg-zinc-800"
                         }`}
-                        onClick={() =>
-                          setQuantity(
-                            item.itemId,
-                            Math.min(item.quantity + 1, item.stock)
-                          )
-                        }
+                        onClick={() => handleIncrease(item)}
                       >
                         +
                       </button>
@@ -275,6 +346,7 @@ export default function Carrito() {
                 <span className="text-sm font-semibold uppercase tracking-wide">
                   Subtotal
                 </span>
+
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
                   {money(subtotalProductos)}
                 </span>
@@ -300,10 +372,12 @@ export default function Carrito() {
                       <span className="font-semibold text-[#e2e2e2]">
                         {option.label}
                       </span>
+
                       <span className="font-semibold text-[#e2e2e2]">
                         {money(option.price)}
                       </span>
                     </div>
+
                     <p className="mt-1 text-xs text-zinc-500">
                       {option.description}
                     </p>
@@ -315,6 +389,7 @@ export default function Carrito() {
                 <span className="text-sm font-semibold uppercase tracking-wide">
                   Envío
                 </span>
+
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
                   {money(envio)}
                 </span>
@@ -325,6 +400,7 @@ export default function Carrito() {
               <span className="font-sans text-2xl font-bold uppercase text-[#e2e2e2]">
                 Total
               </span>
+
               <span className="font-sans text-3xl font-bold text-[#ba203f] tabular-nums">
                 {money(granTotal)}
               </span>

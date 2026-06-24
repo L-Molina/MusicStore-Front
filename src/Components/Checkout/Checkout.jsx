@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { useCart } from "../../hooks/useCart.js";
+import { checkout, clearCart } from "../../redux/cartSlice";
 import { getProductImageUrl } from "../../utils/images";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+
 import "./Checkout.css";
 
 const SHIPPING_OPTIONS = [
@@ -36,8 +38,20 @@ function money(value) {
   })}`;
 }
 
+function getItemId(item) {
+  return item.itemId || item.id || item.productId || item.productoId;
+}
+
+function getItemName(item) {
+  return item.name || item.nombre || item.producto?.nombre || "Producto";
+}
+
+function getBasePrice(item) {
+  return Number(item.price ?? item.precio ?? item.producto?.precio ?? 0);
+}
+
 function getDiscountAmount(item) {
-  const price = Number(item?.price || 0);
+  const price = getBasePrice(item);
 
   if (!price) return 0;
 
@@ -51,6 +65,7 @@ function getDiscountAmount(item) {
 
   if (item?.discountedPrice !== undefined) {
     const discounted = Number(item.discountedPrice || 0);
+
     if (discounted >= 0 && discounted < price) {
       return price - discounted;
     }
@@ -66,7 +81,7 @@ function getDiscountAmount(item) {
 }
 
 function getFinalUnitPrice(item) {
-  const price = Number(item?.price || 0);
+  const price = getBasePrice(item);
   const discountAmount = getDiscountAmount(item);
 
   return Math.max(price - discountAmount, 0);
@@ -76,7 +91,7 @@ function getLineTotal(item) {
   return getFinalUnitPrice(item) * Number(item?.quantity || 0);
 }
 
-function getCurrentUser() {
+function getCurrentUserFromStorage() {
   try {
     return JSON.parse(localStorage.getItem("user"));
   } catch {
@@ -84,7 +99,14 @@ function getCurrentUser() {
   }
 }
 
-function saveLocalOrder({ items, subtotal, shipping, total, paymentMethod, user }) {
+function saveLocalOrder({
+  items,
+  subtotal,
+  shipping,
+  total,
+  paymentMethod,
+  user,
+}) {
   const order = {
     id: `MS-${Date.now()}`,
     fecha: new Date().toISOString(),
@@ -97,17 +119,42 @@ function saveLocalOrder({ items, subtotal, shipping, total, paymentMethod, user 
     metodoPago: paymentMethod,
     usuarioId: user?.id,
     usuarioMail: user?.mail || user?.email,
+    usuario: user
+      ? {
+          id: user.id,
+          nombre: user.nombre,
+          apellido: user.apellido,
+          mail: user.mail || user.email,
+          email: user.email || user.mail,
+        }
+      : null,
     items: items.map((item) => ({
-      id: item.id,
-      nombre: item.name,
-      cantidad: item.quantity,
+      id: item.id || item.productId || item.productoId,
+      productoId: item.id || item.productId || item.productoId,
+      itemId: getItemId(item),
+      nombre: getItemName(item),
+      name: getItemName(item),
+      cantidad: Number(item.quantity || item.cantidad || 1),
+      quantity: Number(item.quantity || item.cantidad || 1),
       precioUnitario: getFinalUnitPrice(item),
-      precioOriginal: Number(item.price || 0),
+      precioOriginal: getBasePrice(item),
+      precio: getFinalUnitPrice(item),
+      price: getFinalUnitPrice(item),
       descuento: getDiscountAmount(item),
       subtotal: getLineTotal(item),
       category: item.category,
-      fotos: item.fotos || [],
-      foto: item.foto || null,
+      categoriaNombre:
+        item.categoriaNombre ||
+        item.category?.nombre ||
+        item.producto?.categoria?.nombre,
+      fotos: item.fotos || item.producto?.fotos || [],
+      foto: item.foto || item.producto?.foto || null,
+      producto: item.producto || {
+        id: item.id || item.productId || item.productoId,
+        nombre: getItemName(item),
+        precio: getBasePrice(item),
+        descuento: getDiscountAmount(item),
+      },
     })),
   };
 
@@ -134,25 +181,26 @@ function saveLocalOrder({ items, subtotal, shipping, total, paymentMethod, user 
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, clear } = useCart();
+  const dispatch = useDispatch();
 
-  const user = getCurrentUser();
-  const usuarioId = user?.id;
+  const { items, loading } = useSelector((state) => state.cart);
+  const { user: reduxUser } = useSelector((state) => state.auth);
 
-  const [loading, setLoading] = useState(false);
+  const user = reduxUser || getCurrentUserFromStorage();
+
   const [selectedPayment, setSelectedPayment] = useState("");
-
-  const selectedShippingId =
-    localStorage.getItem("musicstore_shipping_method") || "estandar";
+  const [processing, setProcessing] = useState(false);
+  const [selectedShippingId, setSelectedShippingId] = useState(
+    localStorage.getItem("musicstore_shipping_method") || "estandar"
+  );
 
   const selectedShipping =
     SHIPPING_OPTIONS.find((option) => option.id === selectedShippingId) ||
     SHIPPING_OPTIONS[1];
 
-  const subtotalProductos = items.reduce(
-    (acc, item) => acc + getLineTotal(item),
-    0
-  );
+  const subtotalProductos = items.reduce((acc, item) => {
+    return acc + getLineTotal(item);
+  }, 0);
 
   const envio = items.length > 0 ? selectedShipping.price : 0;
   const granTotal = subtotalProductos + envio;
@@ -185,6 +233,11 @@ export default function Checkout() {
     },
   ];
 
+  function updateShipping(optionId) {
+    localStorage.setItem("musicstore_shipping_method", optionId);
+    setSelectedShippingId(optionId);
+  }
+
   async function handleCheckout() {
     if (!selectedPayment) {
       alert("Seleccioná un método de pago.");
@@ -197,9 +250,7 @@ export default function Checkout() {
     }
 
     try {
-      setLoading(true);
-
-      const token = localStorage.getItem("token");
+      setProcessing(true);
 
       saveLocalOrder({
         items,
@@ -210,34 +261,24 @@ export default function Checkout() {
         user,
       });
 
-      if (usuarioId && token) {
-        try {
-          const res = await fetch(
-            `http://localhost:8080/carrito/checkout/${usuarioId}`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+      try {
+        await dispatch(checkout()).unwrap();
+      } catch (error) {
+        console.error(
+          "El checkout del backend falló, pero el pedido se guardó localmente:",
+          error
+        );
 
-          if (res.ok) {
-            await res.json().catch(() => null);
-          }
-        } catch (error) {
-          console.error("El checkout backend falló, pero se guardó local:", error);
-        }
+        dispatch(clearCart());
       }
 
-      clear();
       alert("Compra realizada con éxito 🎉");
       navigate("/perfil");
     } catch (err) {
       console.error("Error checkout:", err);
       alert("No se pudo finalizar la compra.");
     } finally {
-      setLoading(false);
+      setProcessing(false);
     }
   }
 
@@ -273,7 +314,9 @@ export default function Checkout() {
           Checkout
         </h1>
 
-        <p className="text-zinc-500">Elegí cómo querés pagar y recibir tu compra.</p>
+        <p className="text-zinc-500">
+          Elegí cómo querés pagar y recibir tu compra.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
@@ -334,10 +377,7 @@ export default function Checkout() {
                   <button
                     key={option.id}
                     type="button"
-                    onClick={() => {
-                      localStorage.setItem("musicstore_shipping_method", option.id);
-                      window.location.reload();
-                    }}
+                    onClick={() => updateShipping(option.id)}
                     className={`rounded-lg border p-5 text-left transition ${
                       isSelected
                         ? "border-[#ba203f] bg-[#ba203f]/10"
@@ -345,9 +385,11 @@ export default function Checkout() {
                     }`}
                   >
                     <p className="font-bold text-[#e2e2e2]">{option.label}</p>
+
                     <p className="mt-2 text-sm text-zinc-500">
                       {option.description}
                     </p>
+
                     <p className="mt-4 text-xl font-bold text-[#ba203f]">
                       {money(option.price)}
                     </p>
@@ -366,18 +408,20 @@ export default function Checkout() {
 
             <div className="mb-8 max-h-[420px] space-y-4 overflow-y-auto pr-2">
               {items.map((item) => {
+                const itemId = getItemId(item);
+                const itemName = getItemName(item);
                 const unitPrice = getFinalUnitPrice(item);
                 const lineTotal = getLineTotal(item);
 
                 return (
                   <div
-                    key={item.itemId || item.id}
+                    key={itemId}
                     className="flex gap-4 rounded-lg border border-zinc-800 bg-[#1a1c1c] p-4"
                   >
                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-zinc-900">
                       <img
                         src={getProductImageUrl(item)}
-                        alt={item.name}
+                        alt={itemName}
                         className="size-full object-cover"
                       />
                     </div>
@@ -385,11 +429,16 @@ export default function Checkout() {
                     <div className="flex min-w-0 grow flex-col justify-between">
                       <div>
                         <p className="line-clamp-2 font-sans text-sm font-bold text-[#e2e2e2]">
-                          {item.name}
+                          {itemName}
                         </p>
 
                         <p className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500">
-                          {item.cartLine ?? item.category}
+                          {item.cartLine ??
+                            item.category?.nombre ??
+                            item.category ??
+                            item.categoriaNombre ??
+                            item.producto?.categoria?.nombre ??
+                            "Sin categoría"}
                         </p>
                       </div>
 
@@ -402,6 +451,7 @@ export default function Checkout() {
                           <span className="font-sans text-sm font-bold text-[#e2e2e2]">
                             {money(lineTotal)}
                           </span>
+
                           <p className="text-[10px] text-zinc-500">
                             {money(unitPrice)} c/u
                           </p>
@@ -447,11 +497,11 @@ export default function Checkout() {
 
             <button
               type="button"
-              disabled={!selectedPayment || loading}
+              disabled={!selectedPayment || loading || processing}
               onClick={handleCheckout}
               className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Procesando..." : "Finalizar compra"}
+              {loading || processing ? "Procesando..." : "Finalizar compra"}
             </button>
           </div>
         </div>

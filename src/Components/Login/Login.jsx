@@ -1,31 +1,35 @@
-import { useState, useId } from "react";
+import { useId, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
+import { login } from "../../redux/authSlice";
+import { fetchCart } from "../../redux/cartSlice";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import { useAuth } from "../../context/AuthContext";
 
 import "./Login.css";
 
 export default function Login() {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const emailId = useId();
   const passId = useId();
+
+  const { loading } = useSelector((state) => state.auth);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember] = useState(true);
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [shakeKey, setShakeKey] = useState(0);
 
-  const navigate = useNavigate();
-
   function validate() {
     if (!email.trim()) return "Ingresá tu correo electrónico.";
-    if (!/\S+@\S+\.\S+/.test(email))
+    if (!/\S+@\S+\.\S+/.test(email)) {
       return "El correo no tiene un formato válido.";
+    }
     if (!password) return "Ingresá tu contraseña.";
     return "";
   }
@@ -42,34 +46,32 @@ export default function Login() {
     }
 
     try {
-      setLoading(true);
-
-      await login(email, password, remember);
+      await dispatch(login({ email, password, remember })).unwrap();
+      dispatch(fetchCart());
 
       localStorage.removeItem("logoutMessage");
 
       navigate("/");
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "No se pudo iniciar sesión.");
       setShakeKey((k) => k + 1);
-    } finally {
-      setLoading(false);
     }
   }
 
   return (
-    <div className="login-bg flex flex-col items-center justify-center px-6 py-16 relative">
+    <div className="login-bg relative flex flex-col items-center justify-center px-6 py-16">
       <div className="login-noise" aria-hidden="true" />
 
-      <main className="relative z-10 w-full max-w-[420px] login-fade-in">
-        <header className="flex flex-col items-center mb-10">
+      <main className="login-fade-in relative z-10 w-full max-w-[420px]">
+        <header className="mb-10 flex flex-col items-center">
           <img
             src={BRAND_LOGO_URL}
             alt="MusicStore"
-            className="h-20 w-auto object-contain mb-6"
+            className="mb-6 h-20 w-auto object-contain"
           />
+
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ba203f]">
-            Iniciar Sesión
+            Iniciar sesión
           </p>
         </header>
 
@@ -81,11 +83,12 @@ export default function Login() {
           {error && (
             <div
               role="alert"
-              className="mb-6 flex items-center gap-3 border border-[#ba203f]/40 bg-[#ba203f]/10 rounded px-4 py-3"
+              className="mb-6 flex items-center gap-3 rounded border border-[#ba203f]/40 bg-[#ba203f]/10 px-4 py-3"
             >
-              <MaterialSymbol className="text-[#ba203f] text-lg shrink-0">
+              <MaterialSymbol className="shrink-0 text-lg text-[#ba203f]">
                 error
               </MaterialSymbol>
+
               <p className="text-[13px] text-[#e2e2e2]">{error}</p>
             </div>
           )}
@@ -156,7 +159,7 @@ export default function Login() {
                     showPass ? "Ocultar contraseña" : "Mostrar contraseña"
                   }
                   onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 transition-colors hover:text-zinc-300"
                 >
                   <MaterialSymbol className="text-[20px]">
                     {showPass ? "visibility_off" : "visibility"}
@@ -174,7 +177,7 @@ export default function Login() {
               {loading ? (
                 <>
                   <span
-                    className="inline-block h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                    className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
                     aria-hidden="true"
                   />
                   Iniciando…
@@ -189,12 +192,12 @@ export default function Login() {
         <footer className="mt-8 text-center">
           <p className="text-[13px] text-zinc-400">
             ¿No tenés cuenta?{" "}
-            <Link to="/Registro">
+            <Link to="/registro">
               <span className="registro-link">Registrate gratis</span>
             </Link>
           </p>
 
-          <p className="mt-6 max-w-xs mx-auto text-[10px] leading-relaxed text-zinc-500">
+          <p className="mx-auto mt-6 max-w-xs text-[10px] leading-relaxed text-zinc-500">
             Al iniciar sesión aceptás nuestros Términos de Servicio y Política
             de Privacidad. MusicStore es una plataforma profesional de audio.
           </p>

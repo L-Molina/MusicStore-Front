@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+
+import { fetchCategories } from "../../redux/categoriesSlice";
+import { fetchProducts } from "../../redux/productsSlice";
 import TarjetaProducto from "../TarjetaProducto/TarjetaProducto";
+
 import "./Catalogo.css";
 
 function getDiscountAmount(price, discount) {
@@ -28,20 +33,72 @@ function getFinalPrice(price, discountAmount) {
   return Math.max(numericPrice - numericDiscount, 0);
 }
 
+function normalizeProduct(product) {
+  const price = Number(product.price ?? product.precio ?? 0);
+  const rawDiscount = product.discountAmount ?? product.descuento ?? 0;
+  const discountAmount = getDiscountAmount(price, rawDiscount);
+  const discountPercent = getDiscountPercent(price, discountAmount);
+  const finalPrice = getFinalPrice(price, discountAmount);
+
+  return {
+    ...product,
+    id: product.id,
+    name: product.name ?? product.nombre ?? "Producto",
+    nombre: product.nombre ?? product.name ?? "Producto",
+    description: product.description ?? product.descripcion ?? "",
+    descripcion: product.descripcion ?? product.description ?? "",
+    price,
+    precio: price,
+    discountedPrice: finalPrice,
+    discount: discountPercent,
+    discountAmount,
+    descuento: discountAmount,
+    discountPercent,
+    stock: Number(product.stock || 0),
+    category:
+      product.category ??
+      product.categoria?.nombre ??
+      product.categoriaNombre ??
+      "Sin categoría",
+    categoryId: product.categoryId ?? product.categoria?.id,
+    categoriaNombre:
+      product.categoriaNombre ??
+      product.category ??
+      product.categoria?.nombre ??
+      "Sin categoría",
+    fotosIds: product.fotosIds || [],
+    fotos: product.fotos || [],
+  };
+}
+
 export default function Catalogo() {
-  const [categories, setCategories] = useState([]);
+  const dispatch = useDispatch();
+
+  const { products = [], loading } = useSelector((state) => state.products);
+  const { categories = [] } = useSelector((state) => state.categories);
+
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [appliedRange, setAppliedRange] = useState({ min: "", max: "" });
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
 
   const [params, setParams] = useSearchParams();
   const catParam = params.get("cat");
   const activeCat = catParam ?? "Todos";
 
-  const list = products
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchProducts(appliedRange));
+  }, [dispatch, appliedRange]);
+
+  const formattedProducts = useMemo(() => {
+    return products.map((product) => normalizeProduct(product));
+  }, [products]);
+
+  const list = formattedProducts
     .filter((p) => activeCat === "Todos" || p.category === activeCat)
     .filter((p) => {
       const name = (p.name || "").toLowerCase();
@@ -54,106 +111,6 @@ export default function Catalogo() {
       if (!onlyAvailable) return true;
       return Number(p.stock || 0) > 0;
     });
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch("http://localhost:8080/categorias");
-
-        if (!res.ok) {
-          throw new Error("No se pudieron cargar las categorías");
-        }
-
-        const data = await res.json();
-        setCategories(data);
-      } catch (err) {
-        console.error("Error trayendo categorías:", err);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-
-        let url = "http://localhost:8080/productos";
-
-        const min = appliedRange.min !== "" ? appliedRange.min : null;
-        const max = appliedRange.max !== "" ? appliedRange.max : null;
-
-        if (min !== null || max !== null) {
-          const queryParams = new URLSearchParams();
-
-          if (min !== null) queryParams.append("min", min);
-          if (max !== null) queryParams.append("max", max);
-
-          url = `http://localhost:8080/productos/precio?${queryParams.toString()}`;
-        }
-
-        const res = await fetch(url);
-
-        if (!res.ok) {
-          throw new Error("No se pudieron cargar los productos");
-        }
-
-        const data = await res.json();
-
-        const formatted = await Promise.all(
-          data.map(async (p) => {
-            let fotos = [];
-
-            if (p.fotosIds?.length > 0) {
-              try {
-                const fotoRes = await fetch(
-                  `http://localhost:8080/fotos/${p.fotosIds[0]}`
-                );
-
-                if (fotoRes.ok) {
-                  const fotoData = await fotoRes.json();
-                  fotos = [fotoData];
-                }
-              } catch (error) {
-                console.error("Error trayendo foto:", error);
-              }
-            }
-
-            const price = Number(p.precio || 0);
-            const discountAmount = getDiscountAmount(price, p.descuento);
-            const discountPercent = getDiscountPercent(price, discountAmount);
-            const finalPrice = getFinalPrice(price, discountAmount);
-
-            return {
-              id: p.id,
-              name: p.nombre,
-              description: p.descripcion,
-              price,
-              discountedPrice: finalPrice,
-              discount: discountPercent,
-              discountAmount,
-              descuento: discountAmount,
-              discountPercent,
-              stock: p.stock,
-              category: p.categoria?.nombre ?? "Sin categoría",
-              categoryId: p.categoria?.id,
-              fotosIds: p.fotosIds,
-              fotos,
-            };
-          })
-        );
-
-        setProducts(formatted);
-      } catch (error) {
-        console.error("Error trayendo productos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [appliedRange]);
 
   function pickCat(cat) {
     const next = new URLSearchParams(params);
@@ -188,18 +145,18 @@ export default function Catalogo() {
                 </button>
               </li>
 
-              {categories.map((c) => (
-                <li key={c.id}>
+              {categories.map((category) => (
+                <li key={category.id}>
                   <button
                     type="button"
                     className={`catalog-category w-full rounded-sm border border-transparent px-1 py-0.5 text-left text-[15px] transition-all duration-200 ${
-                      activeCat === c.nombre
+                      activeCat === category.nombre
                         ? "border-[#333] text-[#ba203f]"
                         : "text-gray-400 hover:text-[#ba203f]"
                     }`}
-                    onClick={() => pickCat(c.nombre)}
+                    onClick={() => pickCat(category.nombre)}
                   >
-                    {c.nombre}
+                    {category.nombre}
                   </button>
                 </li>
               ))}
@@ -276,7 +233,7 @@ export default function Catalogo() {
               <p className="mt-2 font-sans text-xs uppercase tracking-widest text-gray-500">
                 {loading
                   ? "CARGANDO PRODUCTOS..."
-                  : `MOSTRANDO ${list.length} DE ${products.length} PRODUCTOS`}
+                  : `MOSTRANDO ${list.length} DE ${formattedProducts.length} PRODUCTOS`}
               </p>
             </div>
 
@@ -291,12 +248,16 @@ export default function Catalogo() {
             </div>
           </header>
 
-          {loading ? (
+          {loading && formattedProducts.length === 0 ? (
             <div className="py-10 text-white">Cargando productos...</div>
           ) : (
             <div className="grid gap-2 pb-16 md:grid-cols-2 xl:grid-cols-3">
-              {list.map((p) => (
-                <TarjetaProducto key={p.id} product={p} compactCartIcon />
+              {list.map((product) => (
+                <TarjetaProducto
+                  key={product.id}
+                  product={product}
+                  compactCartIcon
+                />
               ))}
 
               {list.length === 0 && (

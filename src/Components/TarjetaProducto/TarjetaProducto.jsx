@@ -1,6 +1,10 @@
+import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { getProductImageUrl } from "../../utils/images";
+
 import { useFavorites } from "../../context/FavoritesProvider";
+import { addCartItem } from "../../redux/cartSlice";
+import { getProductImageUrl } from "../../utils/images";
+
 import "./TarjetaProducto.css";
 
 function money(value) {
@@ -13,7 +17,7 @@ function money(value) {
 }
 
 function getDiscountAmount(product) {
-  const price = Number(product?.price || 0);
+  const price = Number(product?.price || product?.precio || 0);
 
   if (!price) return 0;
 
@@ -37,7 +41,7 @@ function getDiscountAmount(product) {
 }
 
 function getDiscountPercent(product) {
-  const price = Number(product?.price || 0);
+  const price = Number(product?.price || product?.precio || 0);
   const discountAmount = getDiscountAmount(product);
 
   if (!price || !discountAmount) return 0;
@@ -46,24 +50,37 @@ function getDiscountPercent(product) {
 }
 
 function getFinalPrice(product) {
-  const price = Number(product?.price || 0);
+  const price = Number(product?.price || product?.precio || 0);
   const discountAmount = getDiscountAmount(product);
 
   return Math.max(price - discountAmount, 0);
 }
 
 export default function TarjetaProducto({ product }) {
+  const dispatch = useDispatch();
   const { toggleFavorite, isFavorite } = useFavorites();
 
-  const price = Number(product.price || 0);
+  const price = Number(product.price || product.precio || 0);
   const discountAmount = getDiscountAmount(product);
   const discountPercent = getDiscountPercent(product);
   const finalPrice = getFinalPrice(product);
   const hasDiscount = discountAmount > 0;
   const fav = isFavorite(product.id);
 
+  function handleAddCart(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    dispatch(
+      addCartItem({
+        product,
+        quantity: 1,
+      })
+    );
+  }
+
   return (
-    <div className="relative">
+    <div className="relative group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]">
       <button
         type="button"
         onClick={(e) => {
@@ -77,14 +94,11 @@ export default function TarjetaProducto({ product }) {
         {fav ? "❤️" : "🤍"}
       </button>
 
-      <Link
-        to={`/producto/${product.id}`}
-        className="group flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2 transition-colors hover:border-[#555]"
-      >
+      <Link to={`/producto/${product.id}`} className="flex flex-1 flex-col">
         <div className="relative mb-4 h-64 overflow-hidden bg-black">
           <img
             src={getProductImageUrl(product)}
-            alt={product.name}
+            alt={product.name || product.nombre}
             className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-110"
           />
 
@@ -96,7 +110,7 @@ export default function TarjetaProducto({ product }) {
         </div>
 
         <h3 className="mb-1 font-sans text-sm font-semibold text-white group-hover:text-[#ba203f] md:text-base">
-          {product.name}
+          {product.name || product.nombre}
         </h3>
 
         {product.catalogSubtitle && (
@@ -125,6 +139,14 @@ export default function TarjetaProducto({ product }) {
           </div>
         </div>
       </Link>
+
+      <button
+        type="button"
+        onClick={handleAddCart}
+        className="mt-3 w-full bg-[#ba203f] py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+      >
+        Agregar al carrito
+      </button>
     </div>
   );
 }
