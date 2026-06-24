@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HOME_HERO_IMAGE, STITCH_CATEGORY_TILES } from '../../constants/stitchAssets.js'
+import { useDispatch, useSelector } from 'react-redux'
+import { STITCH_CATEGORY_TILES } from '../../constants/stitchAssets.js'
 import guitarAmpBg from '../../assets/guitar-amp-bg.jpg'
-import { PRODUCTS } from '../../data/products.js'
+import { fetchProducts } from '../../../redux/productSlice.js'
 import { useCart } from '../../hooks/useCart.js'
 import { formatPriceEUR } from '../../utils/formatPrice.js'
 import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
@@ -30,8 +32,15 @@ const bundles = [
 
 /** Home según mock `design-mocks/.../home_musicstore_v6/code.html`. */
 export default function Home() {
-  const featured = PRODUCTS.filter((p) => p.featured)
+  const dispatch = useDispatch()
+  const { items: products, loading, error } = useSelector((state) => state.products)
   const { addItem } = useCart()
+
+  useEffect(() => {
+    dispatch(fetchProducts())
+  }, [dispatch])
+
+  const featured = products.filter((p) => p.featured)
 
   return (
     <>
@@ -111,6 +120,12 @@ export default function Home() {
               VER TODO
             </Link>
           </div>
+          {loading && (
+            <p className="text-[#c8c6c5]">Cargando novedades...</p>
+          )}
+          {error && (
+            <p className="text-[#ba203f]">Error al cargar productos: {error}</p>
+          )}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             {featured.slice(0, 4).map((p) => (
               <div key={p.id} className="group flex flex-col">
@@ -130,7 +145,9 @@ export default function Home() {
                       type="button"
                       aria-label={`Añadir ${p.name} al carrito`}
                       className="rounded-full bg-white p-4 text-black hover:bg-[#f0f0f0]"
-                      onClick={() => addItem(p, 1)}
+                      onClick={() =>
+                        addItem({ ...p, price: p.finalPrice ?? p.price }, 1)
+                      }
                     >
                       <MaterialSymbol>shopping_cart</MaterialSymbol>
                     </button>

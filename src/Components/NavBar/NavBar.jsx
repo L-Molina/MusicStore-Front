@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import { useCart } from "../../hooks/useCart";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth.js";
 import { CATEGORY_FILTERS } from "../../data/products.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./NavBar.css";

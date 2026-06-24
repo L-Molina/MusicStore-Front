@@ -1,12 +1,15 @@
 import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
+import { fetchCart } from "../../../redux/cartSlice.js";
+import { registerUser } from "../../../redux/authSlice.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import { useAuth } from "../../context/AuthContext";
 import "./registro.css";
 
 export default function registro() {
-  const { register } = useAuth();
+  const dispatch = useDispatch();
+  const authLoading = useSelector((state) => state.auth.loading);
   const [role, setRole] = useState("COMPRADOR");
 
   const emailId = useId();
@@ -53,27 +56,32 @@ export default function registro() {
     }
   
     setLoading(true);
-  
-    try {
-      await register(
-        {
+
+    const result = await dispatch(
+      registerUser({
+        userData: {
           nombre,
           apellido,
           username: user,
           email,
           password,
-          role
+          role,
         },
-        remember
-      );
-  
+        remember,
+      }),
+    );
+
+    if (registerUser.fulfilled.match(result)) {
+      if (result.payload.user?.id) {
+        dispatch(fetchCart(result.payload.user.id));
+      }
       navigate("/");
-    } catch (err) {
-      setError(err.message);
+    } else {
+      setError(result.payload || "Error al registrarse");
       setShakeKey((k) => k + 1);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   }
 
   /* ── Render ─────────────────────────────────────────────────────── */
@@ -299,10 +307,10 @@ export default function registro() {
             <button
               type="submit"
               className="registro-btn-primary mt-2 flex items-center justify-center gap-2"
-              disabled={loading}
-              aria-busy={loading}
+              disabled={loading || authLoading}
+              aria-busy={loading || authLoading}
             >
-              {loading ? (
+              {loading || authLoading ? (
                 <>
                   <span
                     className="inline-block h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"

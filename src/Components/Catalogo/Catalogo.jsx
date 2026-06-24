@@ -1,16 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { PRODUCTS, CATEGORY_FILTERS, getProductById } from '../../data/products.js'
+import { useDispatch, useSelector } from 'react-redux'
+import { CATEGORY_FILTERS } from '../../data/products.js'
+import { fetchCategories, fetchProducts } from '../../../redux/productSlice.js'
 import { formatPriceEUR } from '../../utils/formatPrice.js'
 import { useCart } from '../../hooks/useCart.js'
 import TarjetaProducto from '../TarjetaProducto/TarjetaProducto'
 import './Catalogo.css'
 
-/**
- * Versión compacta del mock `cat_logo_musicstore_v6/code.html`:
- * filtros lateral + rejilla principal (omitimos demo player inferior).
- */
 export default function Catalogo() {
+  const dispatch = useDispatch()
+  const {
+    items: products,
+    categories,
+    loading,
+    error,
+  } = useSelector((state) => state.products)
+
   const [params, setParams] = useSearchParams()
   const [onlyStock, setOnlyStock] = useState(false)
   const [onlyDiscounts, setOnlyDiscounts] = useState(false)
@@ -18,12 +24,24 @@ export default function Catalogo() {
   const [maxPrice, setMaxPrice] = useState('')
   const [sortBy, setSortBy] = useState('featured')
 
+  useEffect(() => {
+    dispatch(fetchProducts())
+    dispatch(fetchCategories())
+  }, [dispatch])
+
+  const categoryFilters = useMemo(() => {
+    if (categories.length === 0) return CATEGORY_FILTERS
+    return ['Todos', ...categories.map((category) => category.nombre)]
+  }, [categories])
+
   const catParam = params.get('cat')
   const activeCat =
-    catParam && CATEGORY_FILTERS.includes(catParam) ? catParam : 'Todos'
+    catParam && categoryFilters.includes(catParam) ? catParam : 'Todos'
 
   const { addItem } = useCart()
-  const flagship = getProductById('13')
+  const flagship = products.find(
+    (product) => product.category === 'Amplificadores' && product.featured,
+  ) ?? products.find((product) => product.category === 'Amplificadores')
 
   function showFlagship(cat) {
     return cat === 'Todos' || cat === 'Amplificadores'
@@ -37,6 +55,7 @@ export default function Catalogo() {
   }
 
   function getFinalPrice(product) {
+    if (product.finalPrice !== undefined) return product.finalPrice
     const discount = product.discountPercent || 0
     return discount > 0
       ? product.price - (product.price * discount) / 100
@@ -87,12 +106,20 @@ export default function Catalogo() {
     pickCat('Todos')
   }
 
-  const filterItems = CATEGORY_FILTERS.filter((c) => c !== 'Todos')
-  const list = applyFilters(PRODUCTS)
-  const totalInCategory = PRODUCTS.filter((p) => activeCat === 'Todos' || p.category === activeCat).length
+  const filterItems = categoryFilters.filter((c) => c !== 'Todos')
+  const list = applyFilters(products)
+  const totalInCategory = products.filter(
+    (p) => activeCat === 'Todos' || p.category === activeCat,
+  ).length
 
   return (
     <div className="catalogo-shell mx-auto max-w-screen-2xl px-8 pb-24 pt-28 font-sans">
+      {loading && (
+        <p className="mb-6 text-gray-400">Cargando catálogo...</p>
+      )}
+      {error && (
+        <p className="mb-6 text-[#ba203f]">Error al cargar productos: {error}</p>
+      )}
       <main className="flex flex-col gap-8 md:flex-row md:gap-10">
         <aside className="w-full shrink-0 space-y-8 md:w-64 md:space-y-10">
           <section>

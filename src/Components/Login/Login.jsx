@@ -1,13 +1,16 @@
 import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
+import { fetchCart } from "../../../redux/cartSlice.js";
+import { loginUser } from "../../../redux/authSlice.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import { useAuth } from "../../context/AuthContext";
 
 import "./Login.css";
 
 export default function Login() {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const authLoading = useSelector((state) => state.auth.loading);
 
   const emailId = useId();
   const passId = useId();
@@ -44,18 +47,23 @@ export default function Login() {
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      await login(email, password, remember);
+    const result = await dispatch(
+      loginUser({ email, password, remember }),
+    );
 
+    if (loginUser.fulfilled.match(result)) {
+      if (result.payload.user?.id) {
+        dispatch(fetchCart(result.payload.user.id));
+      }
       navigate("/");
-    } catch (err) {
-      setError(err.message);
+    } else {
+      setError(result.payload || "Error al iniciar sesión");
       setShakeKey((k) => k + 1);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   }
 
   return (
@@ -113,7 +121,7 @@ export default function Login() {
                   }}
                   placeholder="nombre@ejemplo.com"
                   className="login-input"
-                  disabled={loading}
+                  disabled={loading || authLoading}
                 />
               </div>
             </div>
@@ -145,7 +153,7 @@ export default function Login() {
                   placeholder="••••••••"
                   className="login-input"
                   style={{ paddingRight: "44px" }}
-                  disabled={loading}
+                  disabled={loading || authLoading}
                 />
                 <button
                   type="button"
@@ -182,10 +190,10 @@ export default function Login() {
             <button
               type="submit"
               className="login-btn-primary mt-2 flex items-center justify-center gap-2"
-              disabled={loading}
-              aria-busy={loading}
+              disabled={loading || authLoading}
+              aria-busy={loading || authLoading}
             >
-              {loading ? (
+              {loading || authLoading ? (
                 <>
                   <span
                     className="inline-block h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"

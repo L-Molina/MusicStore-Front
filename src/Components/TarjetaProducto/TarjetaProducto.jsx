@@ -9,9 +9,11 @@ export default function TarjetaProducto({ product, compactCartIcon }) {
 
   const tieneDescuento = product.discountPercent && product.discountPercent > 0
 
-  const precioConDescuento = tieneDescuento
-    ? product.price - (product.price * product.discountPercent) / 100
-    : product.price
+  const precioConDescuento =
+    product.finalPrice ??
+    (tieneDescuento
+      ? product.price - (product.price * product.discountPercent) / 100
+      : product.price)
 
   return (
     <article className="group relative flex flex-col overflow-hidden border border-[#333333] bg-[#1A1A1A] p-2">

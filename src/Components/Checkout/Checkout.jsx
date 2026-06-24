@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import { RELATED_SUGGESTIONS } from "../../data/products.js";
+import { checkoutCart } from "../../../redux/cartSlice.js";
 import { formatPriceEUR } from "../../utils/formatPrice.js";
 import { useCart } from "../../hooks/useCart.js";
 
@@ -9,10 +11,30 @@ import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 
 const SHIPPING = 25;
 
-export default function Carrito() {
-  const { items, total } = useCart();
+export default function Checkout() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { items, total, checkoutLoading, error } = useCart();
 
   const [selectedPayment, setSelectedPayment] = useState("");
+  const [checkoutError, setCheckoutError] = useState("");
+
+  async function handleCheckout() {
+    if (!isAuthenticated || !user?.id) {
+      setCheckoutError("Debes iniciar sesión para finalizar la compra.");
+      navigate("/login");
+      return;
+    }
+
+    const result = await dispatch(checkoutCart(user.id));
+
+    if (checkoutCart.fulfilled.match(result)) {
+      navigate("/");
+    } else {
+      setCheckoutError(result.payload || "No se pudo finalizar la compra.");
+    }
+  }
 
   const subtotalProductos = total;
   const conEnvío = items.length > 0 ? SHIPPING : 0;
@@ -178,13 +200,20 @@ export default function Carrito() {
               </span>
             </div>
 
+            {(checkoutError || error) && (
+              <p className="mb-4 text-sm text-[#ba203f]">
+                {checkoutError || error}
+              </p>
+            )}
+
             <div className="space-y-4">
               <button
                 type="button"
-                disabled={!selectedPayment}
+                disabled={!selectedPayment || checkoutLoading}
+                onClick={handleCheckout}
                 className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Finalizar compra
+                {checkoutLoading ? "Procesando..." : "Finalizar compra"}
               </button>
             </div>
           </div>

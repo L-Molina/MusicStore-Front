@@ -1,103 +1,71 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
-const AuthContext = createContext();
+const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
     }
+  })
 
-    setLoading(false);
-  }, [token]);
+  const [token, setToken] = useState(() => localStorage.getItem('token'))
 
-  async function login(email, password, remember = true) {
-    const response = await fetch("http://localhost:8080/api/auth/autenticar", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
+  const isAuthenticated = Boolean(token)
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Error al iniciar sesión");
-    }
-
-    setUser(data.user);
-    setToken(data.token);
+  const login = useCallback(async (email, password, remember) => {
+    // Sin backend: simula login exitoso con cualquier email/contraseña
+    // Cuando el backend esté disponible, reemplazar esto por la llamada a la API
+    const fakeUser = { id: 1, nombre: email.split('@')[0], email }
+    const fakeToken = 'local-dev-token'
 
     if (remember) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem('token', fakeToken)
+      localStorage.setItem('user', JSON.stringify(fakeUser))
     }
 
-    return data;
-  }
+    setToken(fakeToken)
+    setUser(fakeUser)
+  }, [])
 
-  async function register(userData, remember = true) {
-    const response = await fetch("http://localhost:8080/api/auth/registrar", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userData),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Error al registrarse");
+  const register = useCallback(async (userData, remember) => {
+    // Sin backend: simula registro exitoso
+    const fakeUser = {
+      id: Date.now(),
+      nombre: userData.nombre,
+      email: userData.email,
     }
-
-    setUser(data.user);
-    setToken(data.token);
+    const fakeToken = 'local-dev-token'
 
     if (remember) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem('token', fakeToken)
+      localStorage.setItem('user', JSON.stringify(fakeUser))
     }
 
-    return data;
-  }
+    setToken(fakeToken)
+    setUser(fakeUser)
+  }, [])
 
-  function logout() {
-    setUser(null);
-    setToken(null);
+  const logout = useCallback(() => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setToken(null)
+    setUser(null)
+  }, [])
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-  }
+  const value = useMemo(
+    () => ({ user, token, isAuthenticated, login, register, logout }),
+    [user, token, isAuthenticated, login, register, logout],
+  )
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        login,
-        register,
-        logout,
-        isAuthenticated: !!token,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider')
+  return ctx
 }

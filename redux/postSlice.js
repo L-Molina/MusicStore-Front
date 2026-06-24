@@ -1,40 +1,36 @@
-import { axios } from "axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import postSlice from "./postSlice";
+import axios from "axios";
+
+const URL = "https://jsonplaceholder.typicode.com/posts";
 
 export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
-  const { data } = await axios.get(
-    "https://jsonplaceholder.typicode.com/posts",
-  );
+  const { data } = await axios.get(URL);
   return data;
 });
 
-export const postSlice = createSlice({
+const postSlice = createSlice({
   name: "posts",
   initialState: {
-    posts: [],
+    items: [],
     loading: false,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(fetchPosts.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(fetchPosts.fulfilled, (state, action) => {
-      state.posts = action.payload;
-      state.loading = false;
-    });
-    builder.addCase(fetchPosts.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.error.message;
-    });
+    builder
+      .addCase(fetchPosts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchPosts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
   },
 });
 
-export const store = configureStore({
-  reducer: {
-    posts: postSlice,
-  },
-});
+export default postSlice.reducer;

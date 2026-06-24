@@ -1,21 +1,63 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { PRODUCTS, getProductById } from '../../data/products.js'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  clearSelectedProduct,
+  fetchProductById,
+  fetchProducts,
+} from '../../../redux/productSlice.js'
 import { useCart } from '../../hooks/useCart.js'
 import { formatPriceEUR } from '../../utils/formatPrice.js'
 import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
 
 export default function DetalleProducto() {
   const { id } = useParams()
-  const product = getProductById(id)
+  const dispatch = useDispatch()
+  const {
+    items: products,
+    selectedProduct,
+    detailLoading,
+    error,
+  } = useSelector((state) => state.products)
+
+  const product =
+    selectedProduct?.id === id
+      ? selectedProduct
+      : products.find((entry) => entry.id === id)
+
   const { addItem } = useCart()
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('desc')
 
+  useEffect(() => {
+    dispatch(fetchProducts())
+    dispatch(fetchProductById(id))
+
+    return () => {
+      dispatch(clearSelectedProduct())
+    }
+  }, [dispatch, id])
+
   const recomendados = useMemo(
-    () => PRODUCTS.filter((p) => p.id !== id).slice(0, 4),
-    [id],
+    () => products.filter((p) => p.id !== id).slice(0, 4),
+    [products, id],
   )
+
+  if (detailLoading && !product) {
+    return (
+      <main className="mx-auto max-w-screen-2xl px-8 pb-24 pt-12 font-sans text-[#c8c6c5]">
+        Cargando producto...
+      </main>
+    )
+  }
+
+  if (error && !product) {
+    return (
+      <main className="mx-auto max-w-screen-2xl px-8 pb-24 pt-12 font-sans text-[#ba203f]">
+        Error al cargar el producto: {error}
+      </main>
+    )
+  }
 
   if (!product) {
     return <Navigate to="/" replace />
@@ -25,9 +67,11 @@ export default function DetalleProducto() {
 
   const hasDiscount = product.discountPercent && product.discountPercent > 0
 
-  const finalPrice = hasDiscount
-    ? product.price - (product.price * product.discountPercent) / 100
-    : product.price
+  const finalPrice =
+    product.finalPrice ??
+    (hasDiscount
+      ? product.price - (product.price * product.discountPercent) / 100
+      : product.price)
 
   const ahorro = product.price - finalPrice
 
