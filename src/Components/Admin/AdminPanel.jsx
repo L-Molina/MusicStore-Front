@@ -12,7 +12,7 @@ import {
   TrendingUp,
   UserRound,
   Users,
-  X
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -96,6 +96,7 @@ function normalizeUser(rawUser, source = "backend") {
       rawUser.authorities ||
       rawUser.tipoUsuario
   );
+
   return {
     ...rawUser,
     id: rawUser.id || rawUser.usuarioId || rawUser.userId || rawUser.mail,
@@ -385,16 +386,13 @@ export default function AdminPanel() {
 
       throw new Error("No hay endpoint de usuarios disponible");
     } catch {
-      const derivedUsers = deriveUsersFromOrdersAndProducts(
-        ordersFromLoad,
-        productsFromLoad
-      );
+      const derivedUsers = deriveBuyersFromOrders(ordersFromLoad);
       setUsers(derivedUsers);
       return derivedUsers;
     }
   }
 
-  function deriveUsersFromOrdersAndProducts(ordersList, productsList) {
+  function deriveBuyersFromOrders(ordersList) {
     const map = new Map();
 
     ordersList.forEach((order) => {
@@ -413,38 +411,6 @@ export default function AdminPanel() {
           telefono: "",
           direccion: "",
           rol: "COMPRADOR",
-          source: "derived",
-        });
-      }
-    });
-
-    productsList.forEach((product) => {
-      const seller =
-        product.vendedor ||
-        product.usuario ||
-        product.seller ||
-        product.user ||
-        product.empleado;
-
-      const sellerId =
-        seller?.id ||
-        product.vendedorId ||
-        product.usuarioId ||
-        product.sellerId;
-
-      if (!seller && !sellerId) return;
-
-      const key = sellerId || seller?.mail || seller?.email;
-
-      if (!map.has(key)) {
-        map.set(key, {
-          id: key,
-          nombre: seller?.nombre || seller?.name || "Vendedor",
-          apellido: seller?.apellido || "",
-          mail: seller?.mail || seller?.email || "",
-          telefono: seller?.telefono || "",
-          direccion: seller?.direccion || "",
-          rol: "VENDEDOR",
           source: "derived",
         });
       }
@@ -475,7 +441,6 @@ export default function AdminPanel() {
   useEffect(() => {
     if (token) loadAll();
   }, [token]);
-
 
   const criticalProducts = useMemo(() => {
     return products.filter((product) => Number(product.stock || 0) <= 3);
@@ -572,63 +537,6 @@ export default function AdminPanel() {
     return Array.from(map.values());
   }, [users, orders]);
 
-  const sellers = useMemo(() => {
-    const map = new Map();
-  
-    users.forEach((u) => {
-      const role = normalizeRole(u.rol || u.role || u.roles || u.authorities);
-  
-      if (!role.includes("VENDEDOR")) return;
-  
-      const key = u.id || u.mail || `${u.nombre}-${u.apellido}`;
-  
-      if (!map.has(key)) {
-        map.set(key, {
-          ...u,
-          productos: 0,
-        });
-      }
-    });
-  
-    products.forEach((product) => {
-      const seller =
-        product.vendedor ||
-        product.usuario ||
-        product.seller ||
-        product.user ||
-        product.empleado;
-  
-      const sellerId =
-        seller?.id ||
-        product.vendedorId ||
-        product.usuarioId ||
-        product.sellerId;
-  
-      if (!seller && !sellerId) return;
-  
-      const key = sellerId || seller?.mail || seller?.email;
-  
-      if (!map.has(key)) {
-        map.set(key, {
-          id: key,
-          nombre: seller?.nombre || seller?.name || "Vendedor",
-          apellido: seller?.apellido || "",
-          mail: seller?.mail || seller?.email || "",
-          telefono: seller?.telefono || "",
-          direccion: seller?.direccion || "",
-          rol: "VENDEDOR",
-          source: "derived",
-          productos: 0,
-        });
-      }
-  
-      const current = map.get(key);
-      current.productos += 1;
-    });
-  
-    return Array.from(map.values());
-  }, [users, products]);
-
   const uniqueClients = buyers.length;
 
   const stats = {
@@ -643,7 +551,6 @@ export default function AdminPanel() {
     categories: categories.length,
     orders: orders.length,
     users: uniqueClients,
-    sellers: sellers.length,
   };
 
   function openEditProduct(product) {
@@ -884,7 +791,7 @@ export default function AdminPanel() {
               active={activeTab === "users"}
               onClick={() => setActiveTab("users")}
               icon={<Users size={18} />}
-              label="Usuarios"
+              label="Compradores"
             />
 
             <SidebarButton
@@ -914,7 +821,7 @@ export default function AdminPanel() {
               <div>
                 <h1 className="text-3xl font-bold">Dashboard administrativo</h1>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Datos reales del sistema: inventario, pedidos, usuarios y
+                  Datos reales del sistema: inventario, pedidos, compradores y
                   categorías.
                 </p>
               </div>
@@ -964,12 +871,7 @@ export default function AdminPanel() {
               />
             )}
 
-            {activeTab === "users" && (
-              <UsersView
-                buyers={buyers}
-                sellers={sellers}
-              />
-            )}
+            {activeTab === "users" && <UsersView buyers={buyers} />}
 
             {activeTab === "settings" && <SettingsView />}
           </section>
@@ -985,7 +887,6 @@ export default function AdminPanel() {
           saveProduct={saveProduct}
         />
       )}
-
     </div>
   );
 }
@@ -1057,7 +958,7 @@ function DashboardView({
 
   return (
     <div className="space-y-7">
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <MetricCard
           title="Ingresos registrados"
           value={money(stats.totalRevenue)}
@@ -1085,17 +986,6 @@ function DashboardView({
               : "Sin compradores detectados"
           }
           icon={<Users size={20} />}
-        />
-
-        <MetricCard
-          title="Vendedores"
-          value={stats.sellers}
-          detail={
-            stats.sellers > 0
-              ? "Detectados desde usuarios o productos"
-              : "Sin vendedores detectados"
-          }
-          icon={<UserRound size={20} />}
         />
       </div>
 
@@ -1578,38 +1468,29 @@ function CategoriesView({
   );
 }
 
-function UsersView({ buyers, sellers }) {
+function UsersView({ buyers }) {
   return (
     <div className="space-y-7">
       <div>
-        <h2 className="text-2xl font-bold">Usuarios</h2>
+        <h2 className="text-2xl font-bold">Compradores</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Separación de compradores y vendedores detectados en el sistema.
+          Listado de compradores detectados desde usuarios o pedidos.
         </p>
       </div>
 
-      <div className="grid gap-7 xl:grid-cols-2">
+      <div className="grid gap-7">
         <UserColumn
-          title="Compradores"
+          title="Compradores registrados"
           subtitle="Usuarios con rol comprador o detectados desde pedidos."
           users={buyers}
           emptyText="No hay compradores para mostrar."
-          type="buyer"
-        />
-
-        <UserColumn
-          title="Vendedores"
-          subtitle="Usuarios con rol vendedor o detectados desde productos."
-          users={sellers}
-          emptyText="No hay vendedores para mostrar."
-          type="seller"
         />
       </div>
     </div>
   );
 }
 
-function UserColumn({ title, subtitle, users, emptyText, type }) {
+function UserColumn({ title, subtitle, users, emptyText }) {
   return (
     <div className="rounded-xl border border-white/10 bg-zinc-900/80">
       <div className="border-b border-white/10 px-6 py-5">
@@ -1645,18 +1526,10 @@ function UserColumn({ title, subtitle, users, emptyText, type }) {
                 )}
               </div>
 
-              {type === "buyer" && (
-                <p className="mt-3 text-sm text-zinc-400">
-                  Pedidos: {user.pedidos || 0} · Total comprado:{" "}
-                  {money(user.totalGastado || 0)}
-                </p>
-              )}
-
-              {type === "seller" && (
-                <p className="mt-3 text-sm text-zinc-400">
-                  Productos publicados: {user.productos || 0}
-                </p>
-              )}
+              <p className="mt-3 text-sm text-zinc-400">
+                Pedidos: {user.pedidos || 0} · Total comprado:{" "}
+                {money(user.totalGastado || 0)}
+              </p>
             </div>
           </div>
         ))}
@@ -1679,19 +1552,12 @@ function SettingsView() {
         Configuración general y resumen de permisos.
       </p>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid gap-4 md:grid-cols-1">
         <div className="rounded-xl border border-white/10 bg-black/40 p-5">
           <h3 className="font-bold">Rol administrador</h3>
           <p className="mt-2 text-sm text-zinc-400">
-            Puede gestionar productos, categorías, pedidos y usuarios si el
+            Puede gestionar productos, categorías, pedidos y compradores si el
             backend lo permite.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-white/10 bg-black/40 p-5">
-          <h3 className="font-bold">Rol vendedor</h3>
-          <p className="mt-2 text-sm text-zinc-400">
-            Accede a Gestión de inventario para administrar sus productos.
           </p>
         </div>
       </div>
