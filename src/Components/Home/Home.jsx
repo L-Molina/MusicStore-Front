@@ -1,9 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { STITCH_CATEGORY_TILES } from "../../constants/stitchAssets.js";
+import {
+  getImageForCategory,
+  STITCH_CATEGORY_TILES,
+} from "../../constants/stitchAssets.js";
 import guitarAmpBg from "../../assets/guitar-amp-bg.jpg";
-import { fetchProducts } from "../../../redux/productSlice.js";
+import {
+  fetchCategories,
+  fetchProducts,
+} from "../../../redux/productSlice.js";
 import { useCart } from "../../hooks/useCart.js";
 import { formatPriceEUR } from "../../utils/formatPrice.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
@@ -14,6 +20,7 @@ export default function Home() {
   const dispatch = useDispatch();
   const {
     items: products,
+    categories,
     loading,
     error,
   } = useSelector((state) => state.products);
@@ -21,9 +28,21 @@ export default function Home() {
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   const featured = products.filter((p) => p.featured);
+
+  const categoryTiles = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.map((c) => ({
+        cat: c.nombre,
+        label: c.nombre.toUpperCase(),
+        img: getImageForCategory(c.nombre),
+      }));
+    }
+    return STITCH_CATEGORY_TILES;
+  }, [categories]);
 
   return (
     <>
@@ -39,14 +58,14 @@ export default function Home() {
         <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8">
           <div className="max-w-2xl">
             <span className="mb-4 block font-sans text-sm font-semibold uppercase tracking-[0.15em] text-[#ba203f]">
-              EQUIPAMIENTO DE ÉLITE
+              INSTRUMENTOS DEL MÁS ALTO CALIBRE
             </span>
             <h1 className="home-hero-title mb-6 font-sans font-extrabold uppercase tracking-tighter text-white">
-              La Precisión del Sonido Puro.
+              Traemos Vintage a la Argentina.
             </h1>
             <p className="mb-8 max-w-lg font-sans text-lg font-normal leading-relaxed text-[#c8c6c5]">
-              Explora nuestra colección curada de instrumentos y herramientas de
-              audio para el músico profesional contemporáneo.
+              Explora nuestra colección de instrumentos, pensada para el músico
+              más moderno, que puede impresionar a cualquier coleccionista.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -76,7 +95,7 @@ export default function Home() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
-          {STITCH_CATEGORY_TILES.map(({ cat, label, img }) => (
+          {categoryTiles.map(({ cat, label, img }) => (
             <Link
               key={cat}
               to={`/catalogo?cat=${encodeURIComponent(cat)}`}

@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth.js";
 import { CATEGORY_FILTERS } from "../../data/products.js";
+import { fetchCategories } from "../../../redux/productSlice.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./NavBar.css";
 
@@ -11,11 +13,19 @@ export default function NavBar() {
   const { count } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const dispatch = useDispatch();
+  const categoriesFromApi = useSelector((state) => state.products.categories);
 
-  const categories = useMemo(
-    () => CATEGORY_FILTERS.filter((c) => c !== "Todos"),
-    []
-  );
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const categories = useMemo(() => {
+    if (categoriesFromApi.length > 0) {
+      return categoriesFromApi.map((c) => c.nombre);
+    }
+    return CATEGORY_FILTERS.filter((c) => c !== "Todos");
+  }, [categoriesFromApi]);
 
   useEffect(() => {
     function onKeyDown(e) {

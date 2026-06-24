@@ -39,12 +39,16 @@ export default function Catalogo() {
     catParam && categoryFilters.includes(catParam) ? catParam : 'Todos'
 
   const { addItem } = useCart()
+  const flagshipCat = useMemo(() => {
+    const amp = categories.find((c) => /amplif/i.test(c.nombre))
+    return amp?.nombre ?? 'Amplificadores'
+  }, [categories])
   const flagship = products.find(
-    (product) => product.category === 'Amplificadores' && product.featured,
-  ) ?? products.find((product) => product.category === 'Amplificadores')
+    (product) => product.category === flagshipCat && product.featured,
+  ) ?? products.find((product) => product.category === flagshipCat)
 
   function showFlagship(cat) {
-    return cat === 'Todos' || cat === 'Amplificadores'
+    return cat === 'Todos' || cat === flagshipCat
   }
 
   function pickCat(cat) {
@@ -210,9 +214,9 @@ export default function Catalogo() {
             <button
               type="button"
               className="text-left text-[15px] text-gray-400 hover:text-white"
-              onClick={() => pickCat('Amplificadores')}
+              onClick={() => pickCat(flagshipCat)}
             >
-              Ofertas destacadas → Amplificadores
+              Ofertas destacadas → {flagshipCat}
             </button>
           </section>
 
@@ -339,5 +343,5 @@ function ProductoDestacado({ product, getFinalPrice, addItem }) {
 
 function titleFor(cat) {
   if (cat === 'Todos') return 'Catálogo completo'
-  return cat === 'Audio Pro' ? 'Audio profesional' : cat
+  return cat
 }

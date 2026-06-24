@@ -8,16 +8,28 @@ import guitarAmpBg from '../assets/guitar-amp-bg.jpg'
 import logo from '../assets/logo.png'
 import logoText from '../assets/logo-text.png'
 
-/**
- * URLs y texto extraídos de los mocks Stitch (home_musicstore_v6, cat_logo_musicstore_v6).
- * HTML original: design-mocks/stitch_musicstore_e_commerce_platform/…/code.html
- */
-
 export const BRAND_LOGO_URL = logo;
 export const BRAND_LOGO_TEXT_URL = logoText;
 export const HOME_HERO_IMAGE = guitarAmpBg;
 
-/** Categorías principales → `cat` coincide con filtros del catálogo */
+const CATEGORY_IMAGE_MAP = [
+  { keywords: ['guitar', 'guitarra'], img: guitarBg },
+  { keywords: ['bass', 'bajo'], img: bassBg },
+  { keywords: ['drum', 'bater'], img: drumsBg },
+  { keywords: ['speaker', 'altavoc', 'monitor', 'parlante'], img: speakersBg },
+  { keywords: ['amplif', 'amp'], img: amplifiersBg },
+  { keywords: ['audio', 'pro', 'interface', 'console', 'mixer'], img: audioProBg },
+]
+
+export function getImageForCategory(name) {
+  if (!name) return guitarBg
+  const lower = name.toLowerCase()
+  const match = CATEGORY_IMAGE_MAP.find(({ keywords }) =>
+    keywords.some((kw) => lower.includes(kw))
+  )
+  return match?.img ?? guitarBg
+}
+
 export const STITCH_CATEGORY_TILES = [
   {
     cat: 'Guitarras',
