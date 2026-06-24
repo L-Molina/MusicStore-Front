@@ -2,192 +2,49 @@ import { useState, useEffect } from "react"
 import { Package, Search, Plus } from "lucide-react"
 import SellerProductCard from "./SellerProductCard"
 import NewProductForm from "./NewProductForm"
-import { useAuth } from "../../context/AuthContext";
-import { getProductImageUrl } from "../../utils/images"
+import { useDispatch, useSelector } from "react-redux";
+import {
+    fetchMyProducts,
+    addMyProduct,
+    updateMyProduct,
+    deleteMyProduct
+} from "../../redux/myProductsSlice";
 
 export default function ProductPanel() {
-  const [products, setProducts] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isNewProductOpen, setIsNewProductOpen] = useState(false)
-  const { token } = useAuth();
+  const dispatch = useDispatch()
+  const { myProducts, error, loading } = useSelector((state) => state.myProducts)
 
-  // ir a buscar tus productos y sus imagenes.
-const fetchProducts = async () => {
-  try {
-    const res = await fetch("http://localhost:8080/productos/mios", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+  // traer los productos
+    useEffect(() => {
+    dispatch(fetchMyProducts())
+  }, [dispatch])
 
+  if (loading) {
+    return <p>Cargando productos...</p>
+  }
 
-    const data = await res.json()
+  if (error) {
+    return <p>Error: {error}</p>
+  }
 
-    const formatted = await Promise.all(
-  data.map(async (p) => {
+  // crear una lista filtrada de productos segun el texto de busqueda
+  const filteredProducts = myProducts.filter((product) => {
+    const name = (product.name || "").toLowerCase()
+    const description = (product.description || "").toLowerCase()
 
-    let fotos = []
-
-    if (p.fotosIds?.length > 0) {
-      const fotoRes = await fetch(
-        `http://localhost:8080/fotos/${p.fotosIds[0]}`
-      )
-
-      const fotoData = await fotoRes.json()
-
-      fotos = [fotoData]
-    }
-
-    return {
-      id: p.id,
-      name: p.nombre,
-      description: p.descripcion,
-      price: p.precio,
-      discount: p.descuento,
-      stock: p.stock,
-      category: p.categoria,
-      categoryId: p.categoria?.id,
-      categoryName: p.categoria?.nombre,
-      fotosIds: p.fotosIds,
-      fotos,
-    }
+    return (
+      name.includes(searchTerm.toLowerCase()) ||
+      description.includes(searchTerm.toLowerCase())
+    )
   })
-)
 
-    setProducts(formatted)
-  } catch (error) {
-    console.error("Error al traer productos:", error)
-  }
-}
-
-// esto se ejecuta siempre que react ejecute el componente.
-useEffect(() => {
-  fetchProducts()
-}, [])
-
-const handleUpdate = async (id, updates) => {
-  try {
-
-    const productToUpdate = products.find((p) => p.id === id)
-
-    const payload = {
-      nombre: productToUpdate.name,
-      descripcion: productToUpdate.description,
-      precio: productToUpdate.price,
-
-      stock:
-        updates.stock ?? productToUpdate.stock,
-
-      descuento:
-        updates.discount ?? productToUpdate.discount,
-
-      categoriaId: productToUpdate.categoryId,
-    }
-
-    const res = await fetch(`http://localhost:8080/productos/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-      throw new Error("Error actualizando producto")
-    }
-
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === id
-          ? { ...product, ...updates }
-          : product
-      )
-    )
-
-  } catch (error) {
-    console.error("Error actualizando producto:", error)
-  }
-}
-// aca eliminamos un producto de la base de datos.
-const handleDelete = async (id) => {
-  try {
-    const res = await fetch(`http://localhost:8080/productos/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (!res.ok) {
-      throw new Error("Error eliminando producto")
-    }
-
-    setProducts((prev) =>
-      prev.filter((product) => product.id !== id)
-    )
-
-  } catch (error) {
-    console.error("Error eliminando producto:", error)
-  }
-}
-// aca cargamos un nuevo producto y su imagen en la base de datos.
-const handleAddProduct = async (newProduct) => {
-  try {
-    const payload = {
-      nombre: newProduct.name,
-      descripcion: newProduct.description,
-      precio: newProduct.price,
-      descuento: newProduct.discount,
-      stock: newProduct.stock,
-      categoriaId: newProduct.categoryId,
-    }
-    const res = await fetch("http://localhost:8080/productos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload),
-    })
-    
-
-    const savedProduct = await res.json()
-    const productoId = savedProduct.id
-
-    const formData = new FormData()
-    formData.append("productoId", productoId)
-    formData.append("file", newProduct.image)
-
-    const resImage = await fetch("http://localhost:8080/fotos", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    })
-    
-    if (!resImage.ok) throw new Error("Error subiendo imagen")
-    
-    await fetchProducts()
-  } catch (error) {
-    console.error("Error creando producto:", error)
-  }
-}
-//
-const filteredProducts = products.filter((product) => {
-  const name = (product.name || "").toLowerCase()
-  const description = (product.description || "").toLowerCase()
-
-  return (
-    name.includes(searchTerm.toLowerCase()) ||
-    description.includes(searchTerm.toLowerCase())
-  )
-})
+  // calcular estadisticas sobre los productos
   const stats = {
-    total: products.length,
-    outOfStock: products.filter((p) => p.stock === 0).length,
-    withDiscount: products.filter((p) => p.discount > 0).length,
+    total: myProducts.length,
+    outOfStock: myProducts.filter((p) => p.stock === 0).length,
+    withDiscount: myProducts.filter((p) => p.discount > 0).length,
   }
 
   return (
@@ -256,8 +113,7 @@ const filteredProducts = products.filter((product) => {
               <SellerProductCard
                 key={product.id}
                 product={product}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
+                
               />
             ))}
           </div>
@@ -280,7 +136,6 @@ const filteredProducts = products.filter((product) => {
       <NewProductForm
         isOpen={isNewProductOpen}
         onClose={() => setIsNewProductOpen(false)}
-        onSubmit={handleAddProduct}
       />
     </div>
   )

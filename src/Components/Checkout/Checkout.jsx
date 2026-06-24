@@ -1,25 +1,32 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-
-import { useCart } from "../../hooks/useCart.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./Checkout.css";
 import { useNavigate } from "react-router-dom";
 import { getProductImageUrl } from "../../utils/images"
+import { useSelector, useDispatch } from "react-redux";
+import { checkout } from "../../redux/cartSlice";
 
 const SHIPPING = 25;
 
 export default function Carrito() {
-  
-const navigate = useNavigate();
-  const { items, total, clear } = useCart();
-  const user = JSON.parse(localStorage.getItem("user"))
-const usuarioId = user?.id
-const [loading, setLoading] = useState(false)
+  const dispatch = useDispatch();
 
+  const { items, loading } = useSelector(
+    state => state.cart
+  );
+
+  const navigate = useNavigate();
   const [selectedPayment, setSelectedPayment] = useState("");
-
-  const subtotalProductos = total;
+  const subtotalProductos = items.reduce(
+  (total, item) =>
+    total +
+    (
+      item.discount > 0
+      ? item.discountedPrice
+      : item.price
+    ) * item.quantity,0
+  );
   const conEnvío = items.length > 0 ? SHIPPING : 0;
   const granTotal = subtotalProductos + conEnvío;
 
@@ -50,36 +57,18 @@ const [loading, setLoading] = useState(false)
       icon: "account_balance",
     },
   ];
-const handleCheckout = async () => {
-  try {
-    setLoading(true)
+  const handleCheckout = async () => {
+    try {
+      await dispatch(checkout()).unwrap();
 
-    const token = localStorage.getItem("token")
+      navigate("/");
+      alert("Compra realizada con éxito 🎉");
 
-    const res = await fetch(
-      `http://localhost:8080/carrito/checkout/${usuarioId}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
-
-    if (!res.ok) return
-
-    await res.json()
-
-    clear() // 👈 IMPORTANTE: vacía el carrito frontend
-navigate("/");
-    alert("Compra realizada con éxito 🎉")
-
-  } catch (err) {
-    console.error("Error checkout:", err)
-  } finally {
-    setLoading(false)
-  }
-}
+    } catch (err) {
+      console.error(err);
+      alert("Error al realizar la compra");
+    }
+  };
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-8 pb-24 pt-32 font-sans">
       <div className="mb-12 flex flex-col gap-2">
@@ -172,8 +161,7 @@ navigate("/");
                       </span>
 
                       <span className="font-sans text-sm font-bold text-[#e2e2e2]">
-                        
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${((item.discount > 0 ? item.discountedPrice : item.price)* item.quantity).toFixed(2)}
                       </span>
                     </div>
                   </div>

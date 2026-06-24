@@ -1,8 +1,14 @@
 import { useState, useRef, useEffect } from "react"
 import { X, ImagePlus } from "lucide-react"
+import { useSelector, useDispatch } from "react-redux";
+import { fetchCategories } from "../../redux/categoriesSlice";
+import { addMyProduct } from "../../redux/myProductsSlice";
 
-export default function NewProductForm({ isOpen, onClose, onSubmit }) {
-  const [categories, setCategories] = useState([])
+export default function NewProductForm({ isOpen, onClose }) {
+  const dispatch = useDispatch();
+  const { categories } = useSelector(
+  state => state.categories
+);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -76,7 +82,7 @@ if (!imageFile) newErrors.image = "La imagen es requerida"
         image: imageFile,
         categoryId: formData.categoryId,
       }
-      onSubmit(newProduct)
+      dispatch(addMyProduct(newProduct))
       handleClose()
     }
   }
@@ -103,19 +109,9 @@ const handleClose = () => {
   onClose()
 }
 
-  useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/categorias")
-      const data = await res.json()
-      setCategories(data)
-    } catch (error) {
-      console.error("Error al traer categorias:", error)
-    }
-  }
-
-  fetchCategories()
-}, [])
+useEffect(() => {
+  dispatch(fetchCategories());
+}, [dispatch]);
 
   if (!isOpen) return null
   

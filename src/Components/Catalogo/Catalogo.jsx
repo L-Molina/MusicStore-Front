@@ -1,23 +1,44 @@
 import {useSearchParams } from 'react-router-dom'
-import { useCart } from '../../hooks/useCart.js'
 import TarjetaProducto from '../TarjetaProducto/TarjetaProducto'
 import './Catalogo.css'
 import { useState } from 'react'
 import { useEffect } from 'react'
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts } from "../../redux/productsSlice";
+import { fetchCategories } from "../../redux/categoriesSlice";
 
 export default function Catalogo() {
-  const [categories, setCategories] = useState([])
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [appliedRange, setAppliedRange] = useState({ min: '', max: '' })
   const [searchTerm, setSearchTerm] = useState('')
-  const [products, setProducts] = useState([])
-const [loading, setLoading] = useState(true)
   const [onlyAvailable, setOnlyAvailable] = useState(false)
   const [params, setParams] = useSearchParams()
+
   const catParam = params.get('cat')
   const activeCat = catParam ?? 'Todos'
-  const { addItem } = useCart()
 
+  const dispatch = useDispatch()
+
+  const {products, loading} = useSelector(
+      state => state.products
+  )
+
+  const {categories} = useSelector(
+      state => state.categories
+  )
+
+  useEffect(()=>{
+      dispatch(fetchCategories())
+  },[dispatch])
+
+
+  useEffect(()=>{
+      dispatch(fetchProducts(appliedRange))
+  },[appliedRange, dispatch])
+
+  if(loading && products.length === 0){
+    return <p>Cargando productos...</p>
+  }
 
   const list = products
     .filter((p) => activeCat === 'Todos' || p.category === activeCat)
@@ -33,83 +54,6 @@ const [loading, setLoading] = useState(true)
       if (!onlyAvailable) return true
       return p.stock > 0
     })
-    
-useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/categorias")
-      const data = await res.json()
-      setCategories(data)
-    } catch (err) {
-      console.error("Error trayendo categorías:", err)
-    }
-  }
-
-  fetchCategories()
-}, [])
-
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      setLoading(true)
-
-      let url = "http://localhost:8080/productos"
-
-      const min = appliedRange.min !== '' ? appliedRange.min : null
-const max = appliedRange.max !== '' ? appliedRange.max : null
-
-      if (min !== null || max !== null) {
-        const params = new URLSearchParams()
-
-        if (min !== null) params.append("min", min)
-        if (max !== null) params.append("max", max)
-
-        url = `http://localhost:8080/productos/precio?${params.toString()}`
-      }
-
-      const res = await fetch(url)
-      const data = await res.json()
-
-      const formatted = await Promise.all(
-        data.map(async (p) => {
-          let fotos = []
-
-          if (p.fotosIds?.length > 0) {
-            const fotoRes = await fetch(
-              `http://localhost:8080/fotos/${p.fotosIds[0]}`
-            )
-
-            const fotoData = await fotoRes.json()
-            fotos = [fotoData]
-          }
-
-          return {
-            id: p.id,
-            name: p.nombre,
-            description: p.descripcion,
-            price: p.precio,
-            discountedPrice: p.precioConDescuento,
-            discount: p.descuento,
-            stock: p.stock,
-            category: p.categoria?.nombre ?? "Sin categoría",
-            categoryId: p.categoria?.id,
-            fotosIds: p.fotosIds,
-            fotos,
-          }
-        })
-      )
-
-      setProducts(formatted)
-
-    } catch (error) {
-      console.error("Error trayendo productos:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  fetchProducts()
-}, [appliedRange])
 
 function pickCat(cat) {
   const next = new URLSearchParams(params)
@@ -120,6 +64,7 @@ function pickCat(cat) {
   setParams(next, { replace: true })
 }
 const filterItems = categories
+
   return (
     <div className="catalogo-shell mx-auto max-w-screen-2xl px-8 pb-24 pt-28 font-sans">
       <main className="flex flex-col gap-8 md:flex-row md:gap-10">
@@ -136,7 +81,7 @@ const filterItems = categories
       type="button"
       
       className={`w-full rounded-sm border border-transparent px-1 py-0.5 text-left text-[15px] transition-colors hover:text-white ${
-                      activeCat === c ? 'border-[#333] text-[#ba203f]' : 'text-gray-400'
+                      activeCat === c.nombre ? 'border-[#333] text-[#ba203f]' : 'text-gray-400'
                     }`}
       onClick={() => pickCat(c.nombre)}
     >
@@ -236,6 +181,3 @@ function titleFor(cat) {
   return cat === 'Audio Pro' ? 'Audio profesional' : cat
 }
 
-function visibleCount() {
-  return list.length
-}

@@ -1,17 +1,42 @@
 import { Link } from "react-router-dom";
-import { useCart } from "../../hooks/useCart.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import { getProductImageUrl } from "../../utils/images"
-import { useAuth } from "../../context/AuthContext"
+import { useSelector, useDispatch } from "react-redux";
+import {fetchCart, removeCartItem, updateQuantity} from "../../redux/cartSlice";
+import { useEffect } from "react"
 const SHIPPING = 25;
 
 export default function Carrito() {
-  const { isAuthenticated } = useAuth()
-  const { items, total, removeItem, setQuantity, addItem } = useCart();
+  const dispatch = useDispatch();
 
-  const subtotalProductos = total;
+  const {token } = useSelector(
+    state => state.auth
+  );
+
+  const { items } = useSelector(
+    state => state.cart
+  );
+
+  useEffect(() => {
+  if (token) {
+    dispatch(fetchCart());
+  }
+}, [token, dispatch]);
+
+  const subtotalProductos = items.reduce(
+    (total, item) =>
+      total +
+      (item.discount > 0
+        ? item.discountedPrice
+        : item.price) *
+      item.quantity,
+    0
+  );
   const conEnvío = items.length > 0 ? SHIPPING : 0;
   const granTotal = subtotalProductos + conEnvío;
+  const isAuthenticated = !!token;
+
+  
 
 if (items.length === 0) {
   return (
@@ -82,14 +107,14 @@ if (items.length === 0) {
                       {item.name}
                     </Link>
                     <p className="mt-1 text-sm uppercase tracking-widest text-zinc-500">
-                      {item.cartLine ?? item.category?.nombre}
+                      {item.cartLine ?? item.category}
                     </p>
                   </div>
                   <button
                     type="button"
                     aria-label={`Eliminar ${item.name}`}
                     className="text-zinc-600 hover:text-[#ba203f]"
-                    onClick={() => removeItem(item.itemId)}
+                    onClick={() => dispatch(removeCartItem(item.itemId))}
                   >
                     <MaterialSymbol>delete</MaterialSymbol>
                   </button>
@@ -99,7 +124,16 @@ if (items.length === 0) {
   <button
   type="button"
   className="border-r border-zinc-800 px-3 py-1 text-zinc-400 hover:bg-zinc-800"
-  onClick={() => setQuantity(item.itemId, item.quantity - 1)}
+  onClick={() => {
+  if (item.quantity > 1) {
+    dispatch(updateQuantity({
+      itemId: item.itemId,
+      quantity: item.quantity - 1
+    }))
+  } else {
+    dispatch(removeCartItem(item.itemId))
+  }
+}}
 >
   −
 </button>
@@ -112,9 +146,12 @@ if (items.length === 0) {
       const value = e.target.value
 
       if (value === "") {
-        setQuantity(item.itemId, 1)
-        return
-      }
+        dispatch(updateQuantity({
+        itemId: item.itemId,
+        quantity: 1
+      }))
+  return
+}
 
       if (!/^\d+$/.test(value)) return
 
@@ -123,7 +160,10 @@ if (items.length === 0) {
         Math.min(Number(value), item.stock)
       )
 
-      setQuantity(item.itemId, cantidad)
+      dispatch(updateQuantity({
+        itemId: item.itemId,
+        quantity: cantidad
+      }))
     }}
   />
 
@@ -137,7 +177,10 @@ if (items.length === 0) {
           : "text-zinc-400 hover:bg-zinc-800"
       }`}
     onClick={() =>
-      setQuantity(item.itemId, Math.min(item.quantity + 1, item.stock))
+      dispatch(updateQuantity({
+        itemId:item.itemId,
+        quantity: Math.min(item.quantity + 1, item.stock)
+      }))
     }
   >
     +

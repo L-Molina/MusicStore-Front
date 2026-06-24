@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { Trash2, Pencil, Check, X } from "lucide-react"
 import { getProductImageUrl } from "../../utils/images"
+import { useDispatch } from "react-redux";
+import { updateMyProduct, deleteMyProduct } from "../../redux/myProductsSlice";
 
-export default function SellerProductCard({ product, onUpdate, onDelete }) {
+export default function SellerProductCard({ product}) {
+  const dispatch = useDispatch();
   const price = product.price ?? 0
   const [editingDiscount, setEditingDiscount] = useState(false)
   const [editingStock, setEditingStock] = useState(false)
@@ -17,16 +20,30 @@ const [tempStock, setTempStock] = useState(
   const discountedPrice = product.price * (1 - product.discount / 100)
 
   const handleDiscountSave = () => {
-    const newDiscount = Math.min(100, Math.max(0, parseInt(tempDiscount) || 0))
-    onUpdate(product.id, { discount: newDiscount })
-    setEditingDiscount(false)
-  }
+  const newDiscount = Math.min(100, Math.max(0, parseInt(tempDiscount) || 0))
 
-  const handleStockSave = () => {
-    const newStock = Math.max(0, parseInt(tempStock) || 0)
-    onUpdate(product.id, { stock: newStock })
-    setEditingStock(false)
-  }
+  dispatch(updateMyProduct({
+    id: product.id,
+    changes: {
+      discount: newDiscount
+    }
+  }))
+
+  setEditingDiscount(false)
+}
+
+const handleStockSave = () => {
+  const newStock = Math.max(0, parseInt(tempStock) || 0)
+
+  dispatch(updateMyProduct({
+    id: product.id,
+    changes: {
+      stock: newStock
+    }
+  }))
+
+  setEditingStock(false)
+}
 
   const handleDiscountCancel = () => {
     setTempDiscount(product.discount.toString())
@@ -213,7 +230,7 @@ const [tempStock, setTempStock] = useState(
               </button>
               <button
                 onClick={() => {
-                  onDelete(product.id)
+                  dispatch(deleteMyProduct(product.id))
                   setShowDeleteModal(false)
                 }}
                 className="rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"

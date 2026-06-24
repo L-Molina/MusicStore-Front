@@ -2,22 +2,25 @@ import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import { useAuth } from "../../context/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "../../redux/authSlice";
+import { fetchCart } from "../../redux/cartSlice";
 
 import "./Login.css";
 
 export default function Login() {
-  const { login} = useAuth();
+  const dispatch = useDispatch();
 
   const emailId = useId();
   const passId = useId();
-  const remId = useId();
+  const {loading} = useSelector(
+    state=>state.auth
+  )
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [shakeKey, setShakeKey] = useState(0);
 
@@ -43,19 +46,13 @@ export default function Login() {
     }
 
     try {
-      setLoading(true);
+      await dispatch(login({email, password, remember})).unwrap();
+      dispatch(fetchCart());
+      navigate("/");
 
-      const data = await login(email, password, remember);
-
-      
-        navigate("/");
-      
-      
     } catch (err) {
       setError(err.message);
       setShakeKey((k) => k + 1);
-    } finally {
-      setLoading(false);
     }
   }
 

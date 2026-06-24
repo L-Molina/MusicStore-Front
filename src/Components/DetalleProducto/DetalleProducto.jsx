@@ -1,94 +1,66 @@
 import {useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useCart } from '../../hooks/useCart.js'
 import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
 import './DetalleProducto.css'
-import { useAuth } from '../../context/AuthContext'
+import { useSelector, useDispatch } from "react-redux";
 import { getProductImageUrl } from "../../utils/images"
+import { fetchProductById } from "../../redux/productDetailSlice";
+import { addCartItem } from "../../redux/cartSlice";
 
 export default function DetalleProducto() {
-const { isAuthenticated } = useAuth()
+  const dispatch = useDispatch();
+
+  const {token } = useSelector(
+      state => state.auth
+  );
+
+  const { items } = useSelector(
+    state => state.cart
+  );
+
+  const { product, loading, error } = useSelector(
+    state => state.productDetail
+  );
+  const isAuthenticated = !!token;
 
   const { id } = useParams()
-    const productId = Number(id)
-const { addItem, items } = useCart()
+  const productId = Number(id)
 
-  const [product, setProduct] = useState(null)  
- 
-const [loading, setLoading] = useState(true)
- const [qty, setQty] = useState("1")
+  const [qty, setQty] = useState("1")
 
-const productInCart = items.find(item => item.id === product?.id)
+  const productInCart = items.find(item => item.id === product?.id)
 
-const quantityInCart = productInCart?.quantity || 0
+  const quantityInCart = productInCart?.quantity || 0
 
-const stockDisponible = (product?.stock || 0) - quantityInCart
+  const stockDisponible = (product?.stock || 0) - quantityInCart
 
-const outOfStock = stockDisponible <= 0
-const disabledCart = outOfStock || !isAuthenticated
-useEffect(() => {
-  const fetchProduct = async () => {
-    try {
-      setLoading(true)
+  const outOfStock = stockDisponible <= 0
+  const disabledCart = outOfStock || !isAuthenticated
 
-      const res = await fetch(`http://localhost:8080/productos/${productId}`)
+  useEffect(() => {
+    dispatch(fetchProductById(productId));
+  }, [dispatch, productId]);
 
-      if (!res.ok) {
-        setProduct(null)
-        return
-      }
-
-      const p = await res.json()
-
-      let fotos = []
-
-      if (p.fotosIds?.length > 0) {
-        const fotoRes = await fetch(
-          `http://localhost:8080/fotos/${p.fotosIds[0]}`
-        )
-
-        const fotoData = await fotoRes.json()
-
-        fotos = [fotoData] // {id, file}
-      }
-
-      const formatted = {
-        id: p.id,
-        name: p.nombre,
-        description: p.descripcion,
-        price: p.precio,
-        discountedPrice: p.precioConDescuento,
-        discount: p.descuento,
-        stock: p.stock,
-        category: p.categoria?.nombre ?? "Sin categoría",
-        categoryId: p.categoria?.id,
-        fotos
-      }
-
-      setProduct(formatted)
-    } catch (err) {
-      console.error("Error trayendo producto:", err)
-      setProduct(null)
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (stockDisponible <= 0) {
+      setQty("1");
+      return;
     }
-  }
 
-  fetchProduct()
-}, [productId])
-
-useEffect(() => {
-  if (Number(qty) > stockDisponible) {
-    setQty(String(stockDisponible))
-  }
-
-  if (stockDisponible <= 0) {
-    setQty("1")
-  }
-}, [stockDisponible])
+    if (Number(qty) > stockDisponible) {
+      setQty(String(stockDisponible));
+    }
+  }, [stockDisponible]);
 
 if (loading) {
   return <div className="text-white p-10">Cargando...</div>
+}
+if (error) {
+  return (
+    <div className="text-white p-10">
+      Error: {error}
+    </div>
+  );
 }
 
 if (!product) {
@@ -261,9 +233,15 @@ if (!product) {
 }`
   }
   onClick={() => {
-    if (outOfStock) return
-    addItem(product, Math.min(Number(qty), stockDisponible))
-  }}
+  if (outOfStock) return
+
+  dispatch(
+    addCartItem({
+      product,
+      quantity: Math.min(Number(qty), stockDisponible)
+    })
+  )
+}}
 >
   <MaterialSymbol>shopping_cart</MaterialSymbol>
   {

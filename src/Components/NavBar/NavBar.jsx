@@ -1,15 +1,28 @@
 import { Link } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
-import { useCart } from "../../hooks/useCart";
-import { useAuth } from "../../context/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import {logout } from "../../redux/authSlice";
+import { clearCart } from "../../redux/cartSlice";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./NavBar.css";
 
 export default function NavBar() {
-  const { count } = useCart();
-  const { isAuthenticated, user, logout } = useAuth();
-const isSeller = user?.rol === "VENDEDOR";
-const isAdmin = user?.rol === "ADMIN";
+  const dispatch = useDispatch();
+
+  const { user, token } = useSelector(
+      state => state.auth
+  );
+  const { items } = useSelector(
+    state => state.cart
+  );
+
+  const count = items.reduce(
+    (acc, item) => acc + item.quantity,
+    0
+  );
+  const isAuthenticated = !!token;
+  const isSeller = user?.rol === "VENDEDOR";
+  const isAdmin = user?.rol === "ADMIN";
 
   return (
     <nav className="navbar-stitch sticky top-0 z-50 border-b border-[#ba203f] bg-black font-sans text-sm font-medium tracking-wide text-[#ba203f]">
@@ -82,7 +95,7 @@ const isAdmin = user?.rol === "ADMIN";
               </span>
 
               <button
-                onClick={logout}
+                onClick={() => {dispatch(logout()); dispatch(clearCart());}}
                 className="flex items-center gap-2 text-[#ba203f] hover:text-white"
               >
                 <MaterialSymbol>logout</MaterialSymbol>

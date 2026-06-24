@@ -1,11 +1,11 @@
 import { Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function ProtectedRoute({
   children,
   allowedRoles,
 }) {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
+  const { user, token } = useSelector((state) => state.auth);
 
   // 1. 🔒 No logueado
   if (!user || !token) {

@@ -2,11 +2,12 @@ import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BRAND_LOGO_URL } from "../../constants/stitchAssets.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
-import { useAuth } from "../../context/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import { login, logout,register } from "../../redux/authSlice";
 import "./registro.css";
 
 export default function registro() {
-  const { register } = useAuth();
+  const dispatch = useDispatch();
   const [role, setRole] = useState("COMPRADOR");
 
   const emailId = useId();
@@ -23,7 +24,9 @@ export default function registro() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const {loading} = useSelector(
+    state => state.auth
+  );
   const [error, setError] = useState("");
   const [shakeKey, setShakeKey] = useState(0);
 
@@ -41,41 +44,33 @@ export default function registro() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-  
+
     const msg = validate();
-  
+
     if (msg) {
       setError(msg);
       setShakeKey((k) => k + 1);
       return;
     }
-  
-    setLoading(true);
-  
-    try {
-      const data = await register(
-        {
-          nombre,
-          apellido,
-          username: user,
-          email,
-          password,
-          role
-        },
-        remember
-      );
-  
-      
-        navigate("/");
-      
-    } catch (err) {
-      setError(err.message);
-      setShakeKey((k) => k + 1);
-    } finally {
-      setLoading(false);
-    }
-  }
 
+    try {
+      await dispatch(register({
+        nombre,
+        apellido,
+        username: user,
+        email,
+        password,
+        role,
+        remember
+    })).unwrap();
+
+    navigate("/");
+
+  } catch (err) {
+    setError(err.message);
+    setShakeKey((k) => k + 1);
+  }
+}
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <div className="registro-bg flex flex-col items-center justify-center px-6 py-16 relative">
