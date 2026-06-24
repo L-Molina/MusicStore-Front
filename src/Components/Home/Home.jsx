@@ -1,52 +1,39 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
-import { STITCH_CATEGORY_TILES } from '../../constants/stitchAssets.js'
-import guitarAmpBg from '../../assets/guitar-amp-bg.jpg'
-import { fetchProducts } from '../../../redux/productSlice.js'
-import { useCart } from '../../hooks/useCart.js'
-import { formatPriceEUR } from '../../utils/formatPrice.js'
-import MaterialSymbol from '../MaterialSymbol/MaterialSymbol'
-import './Home.css'
-
-const bundles = [
-  {
-    n: '01',
-    title: 'The Soloist Bundle',
-    body: 'El set definitivo para el guitarrista moderno: Guitarra, Amplificador de 20W y cable de alta fidelidad.',
-    icon: 'trending_up',
-  },
-  {
-    n: '02',
-    title: 'Studio Master Set',
-    body: 'Audio interface de 4 canales junto con monitores de campo cercano para una mezcla perfecta.',
-    icon: 'mic_external_on',
-  },
-  {
-    n: '03',
-    title: 'Bass Foundation',
-    body: 'Bajo activo de 5 cuerdas con funda rígida y afinador de precisión integrado.',
-    icon: 'music_note',
-  },
-]
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { STITCH_CATEGORY_TILES } from "../../constants/stitchAssets.js";
+import guitarAmpBg from "../../assets/guitar-amp-bg.jpg";
+import { fetchProducts } from "../../../redux/productSlice.js";
+import { useCart } from "../../hooks/useCart.js";
+import { formatPriceEUR } from "../../utils/formatPrice.js";
+import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
+import "./Home.css";
 
 /** Home según mock `design-mocks/.../home_musicstore_v6/code.html`. */
 export default function Home() {
-  const dispatch = useDispatch()
-  const { items: products, loading, error } = useSelector((state) => state.products)
-  const { addItem } = useCart()
+  const dispatch = useDispatch();
+  const {
+    items: products,
+    loading,
+    error,
+  } = useSelector((state) => state.products);
+  const { addItem } = useCart();
 
   useEffect(() => {
-    dispatch(fetchProducts())
-  }, [dispatch])
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-  const featured = products.filter((p) => p.featured)
+  const featured = products.filter((p) => p.featured);
 
   return (
     <>
       <header className="relative flex h-[min(870px,90vh)] w-full items-center overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
-          <img alt="" className="size-full object-cover opacity-60" src={guitarAmpBg} />
+          <img
+            alt=""
+            className="size-full object-cover opacity-60"
+            src={guitarAmpBg}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8">
@@ -58,8 +45,8 @@ export default function Home() {
               La Precisión del Sonido Puro.
             </h1>
             <p className="mb-8 max-w-lg font-sans text-lg font-normal leading-relaxed text-[#c8c6c5]">
-              Explora nuestra colección curada de instrumentos y herramientas de audio para el músico
-              profesional contemporáneo.
+              Explora nuestra colección curada de instrumentos y herramientas de
+              audio para el músico profesional contemporáneo.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -101,17 +88,24 @@ export default function Home() {
                 src={img}
               />
               <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-4">
-                <p className="font-sans text-sm font-semibold uppercase tracking-wide text-white">{label}</p>
+                <p className="font-sans text-sm font-semibold uppercase tracking-wide text-white">
+                  {label}
+                </p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      <section id="novedades" className="border-y border-[#333333] bg-[#1A1A1A] py-20">
+      <section
+        id="novedades"
+        className="border-y border-[#333333] bg-[#1A1A1A] py-20"
+      >
         <div className="mx-auto max-w-screen-2xl px-8">
           <div className="mb-12 flex items-center gap-4">
-            <h2 className="home-section-title font-sans font-bold uppercase text-white">Novedades</h2>
+            <h2 className="home-section-title font-sans font-bold uppercase text-white">
+              Novedades
+            </h2>
             <div className="h-px flex-grow bg-[#333333]" />
             <Link
               to="/catalogo"
@@ -120,9 +114,7 @@ export default function Home() {
               VER TODO
             </Link>
           </div>
-          {loading && (
-            <p className="text-[#c8c6c5]">Cargando novedades...</p>
-          )}
+          {loading && <p className="text-[#c8c6c5]">Cargando novedades...</p>}
           {error && (
             <p className="text-[#ba203f]">Error al cargar productos: {error}</p>
           )}
@@ -160,48 +152,21 @@ export default function Home() {
                   {p.category}
                 </Link>
                 <h3 className="mt-1 font-sans text-xl font-bold leading-tight text-white">
-                  <Link to={`/producto/${p.id}`} className="hover:text-[#ba203f]">
+                  <Link
+                    to={`/producto/${p.id}`}
+                    className="hover:text-[#ba203f]"
+                  >
                     {p.name}
                   </Link>
                 </h3>
-                <p className="mt-2 font-sans text-base text-[#c8c6c5]">{formatPriceEUR(p.price)}</p>
+                <p className="mt-2 font-sans text-base text-[#c8c6c5]">
+                  {formatPriceEUR(p.price)}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
-
-      <section className="mx-auto max-w-screen-2xl bg-black px-8 py-20">
-        <h2 className="home-section-title mb-12 text-center font-sans font-bold uppercase text-white">
-          Equipamiento Recomendado
-        </h2>
-        <div className="grid grid-cols-1 gap-0 border border-[#333333] md:grid-cols-2 lg:grid-cols-3">
-          {bundles.map((b, i) => (
-            <div
-              key={b.n}
-              className={`group border-[#333333] p-10 transition-colors hover:bg-[#1A1A1A] lg:border-r ${
-                i === 2 ? '' : 'border-b md:border-b-0'
-              } ${i === 0 ? 'md:border-r lg:border-r' : ''} ${i === 1 ? 'lg:border-r' : ''}`}
-            >
-              <div className="mb-10 flex items-start justify-between">
-                <div>
-                  <p className="mb-1 font-sans text-xs text-gray-500">{b.n}</p>
-                  <h4 className="font-sans text-2xl font-bold text-white">{b.title}</h4>
-                </div>
-                <MaterialSymbol className="text-[#ba203f]">{b.icon}</MaterialSymbol>
-              </div>
-              <p className="mb-8 font-sans text-base leading-relaxed text-[#c8c6c5]">{b.body}</p>
-              <Link
-                to="/catalogo"
-                className="font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-[#ba203f]"
-              >
-                CONFIGURAR{' '}
-                <MaterialSymbol className="align-middle text-sm">arrow_forward</MaterialSymbol>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
     </>
-  )
+  );
 }

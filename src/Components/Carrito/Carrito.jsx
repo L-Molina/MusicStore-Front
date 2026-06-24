@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { RELATED_SUGGESTIONS } from "../../data/products.js";
 import { formatPriceEUR } from "../../utils/formatPrice.js";
 import { useCart } from "../../hooks/useCart.js";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "../../hooks/useAuth.js";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 
 const SHIPPING = 25;
@@ -59,7 +59,7 @@ export default function Carrito() {
               <div className="h-40 w-full shrink-0 overflow-hidden rounded bg-zinc-900 md:w-40">
                 <Link to={`/producto/${item.id}`}>
                   <img
-                    src={getProductImageUrl(item)}
+                    src={item.image}
                     alt={item.name}
                     className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />

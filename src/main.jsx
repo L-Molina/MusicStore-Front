@@ -22,7 +22,7 @@ function AppBootstrap() {
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <AppBootstrap />
     </Provider>
   </StrictMode>,
 );
