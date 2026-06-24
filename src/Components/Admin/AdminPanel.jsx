@@ -1,14 +1,10 @@
 import {
-  AlertTriangle,
   BarChart3,
-  Boxes,
-  ChevronRight,
   DollarSign,
   Layers,
   Package,
   Pencil,
   Save,
-  Search,
   Settings,
   ShoppingCart,
   Tags,
@@ -16,7 +12,7 @@ import {
   TrendingUp,
   UserRound,
   Users,
-  X,
+  X
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -26,10 +22,25 @@ const API_URL = "http://localhost:8080";
 
 function money(value) {
   const number = Number(value || 0);
+
   return `$${number.toLocaleString("es-AR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+function formatDate(date) {
+  if (!date) return "Sin fecha";
+
+  try {
+    return new Date(date).toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return date;
+  }
 }
 
 function getDiscountAmount(product) {
@@ -44,12 +55,153 @@ function getDiscountPercent(product) {
 
   return Math.round((discount / price) * 100);
 }
+
 function getImage(product) {
   const file = product?.foto?.file;
 
   if (!file) return QUESTION_PLACEHOLDER;
 
   return `data:image/jpeg;base64,${file}`;
+}
+
+function normalizeRole(value) {
+  if (!value) return "";
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeRole(item))
+      .join(" ")
+      .toUpperCase();
+  }
+
+  if (typeof value === "object") {
+    return String(
+      value.nombre ||
+        value.name ||
+        value.authority ||
+        value.rol ||
+        value.role ||
+        ""
+    ).toUpperCase();
+  }
+
+  return String(value).toUpperCase();
+}
+
+function normalizeUser(rawUser, source = "backend") {
+  const role = normalizeRole(
+    rawUser.rol ||
+      rawUser.role ||
+      rawUser.roles ||
+      rawUser.authorities ||
+      rawUser.tipoUsuario
+  );
+  return {
+    ...rawUser,
+    id: rawUser.id || rawUser.usuarioId || rawUser.userId || rawUser.mail,
+    nombre: rawUser.nombre || rawUser.name || "Sin nombre",
+    apellido: rawUser.apellido || rawUser.lastName || "",
+    mail: rawUser.mail || rawUser.email || rawUser.usuarioMail || "",
+    telefono: rawUser.telefono || rawUser.phone || "",
+    direccion: rawUser.direccion || rawUser.address || "",
+    rol: role || "SIN_ROL",
+    source,
+  };
+}
+
+function normalizeOrder(order, source = "backend") {
+  const id =
+    order.id ||
+    order.orderId ||
+    order.numero ||
+    `LOCAL-${order.fecha || order.date || Date.now()}`;
+
+  return {
+    ...order,
+    id,
+    source,
+    fecha: order.fecha || order.date || order.createdAt || order.fechaCompra || "",
+    total: Number(order.total || order.totalFinal || order.precioTotal || 0),
+    estado: order.estado || order.status || "Procesando",
+    usuarioId: order.usuario?.id || order.usuarioId || order.userId || null,
+    usuarioMail:
+      order.usuario?.mail ||
+      order.usuario?.email ||
+      order.usuarioMail ||
+      order.email ||
+      order.mail ||
+      "",
+    usuarioNombre:
+      order.usuario?.nombre ||
+      order.usuarioNombre ||
+      order.nombreUsuario ||
+      "",
+    items:
+      order.items ||
+      order.productos ||
+      order.detalles ||
+      order.detallePedidos ||
+      order.detalleProductos ||
+      order.cart ||
+      order.lineas ||
+      [],
+  };
+}
+
+function formatOrderClient(order) {
+  if (order.usuarioNombre && order.usuarioMail) {
+    return `${order.usuarioNombre} (${order.usuarioMail})`;
+  }
+
+  if (order.usuarioNombre) return order.usuarioNombre;
+  if (order.usuarioMail) return order.usuarioMail;
+
+  if (order.usuario?.nombre) {
+    return `${order.usuario.nombre} ${order.usuario.apellido || ""}`;
+  }
+
+  if (order.usuario?.mail) return order.usuario.mail;
+  if (order.usuario?.email) return order.usuario.email;
+
+  return "Cliente sin datos";
+}
+
+function OrderStatusBadge({ status }) {
+  const normalized = String(status || "").toLowerCase();
+
+  if (
+    normalized.includes("entregado") ||
+    normalized.includes("completado") ||
+    normalized.includes("finalizado")
+  ) {
+    return (
+      <span className="rounded bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-300">
+        Finalizado
+      </span>
+    );
+  }
+
+  if (normalized.includes("cancelado") || normalized.includes("rechazado")) {
+    return (
+      <span className="rounded bg-red-500/15 px-2 py-1 text-xs font-semibold text-red-300">
+        Cancelado
+      </span>
+    );
+  }
+
+  if (normalized.includes("camino") || normalized.includes("enviado")) {
+    return (
+      <span className="rounded bg-blue-500/15 px-2 py-1 text-xs font-semibold text-blue-300">
+        En camino
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
+      Procesando
+    </span>
+  );
 }
 
 export default function AdminPanel() {
@@ -59,8 +211,8 @@ export default function AdminPanel() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [inventoryFilter, setInventoryFilter] = useState("top");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -118,6 +270,7 @@ export default function AdminPanel() {
     );
 
     setProducts(formatted);
+    return formatted;
   }
 
   async function loadCategories() {
@@ -128,28 +281,189 @@ export default function AdminPanel() {
     setCategories(data);
   }
 
+  function loadLocalOrders() {
+    const keys = Object.keys(localStorage).filter((key) => {
+      return (
+        key === "orders" ||
+        key === "compras" ||
+        key.startsWith("orders_user_")
+      );
+    });
+
+    let localOrders = [];
+
+    keys.forEach((key) => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+
+        const parsed = JSON.parse(raw);
+
+        if (Array.isArray(parsed)) {
+          localOrders = [
+            ...localOrders,
+            ...parsed.map((order) => normalizeOrder(order, "local")),
+          ];
+        }
+      } catch {
+        // Ignoramos datos inválidos
+      }
+    });
+
+    return localOrders;
+  }
+
+  function mergeOrders(backendOrders, localOrders) {
+    const map = new Map();
+
+    [...backendOrders, ...localOrders].forEach((order) => {
+      const key =
+        order.id ||
+        `${order.usuarioMail || "sin-mail"}-${order.fecha || ""}-${order.total}`;
+
+      if (!map.has(key)) {
+        map.set(key, order);
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => {
+      const dateA = new Date(a.fecha || 0).getTime();
+      const dateB = new Date(b.fecha || 0).getTime();
+      return dateB - dateA;
+    });
+  }
+
   async function loadOrders() {
     try {
+      let backendOrders = [];
+
       const res = await fetch(`${API_URL}/pedidos`, {
         headers: authHeaders,
       });
 
-      if (!res.ok) {
-        setOrders([]);
-        return;
+      if (res.ok) {
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          backendOrders = data.map((order) => normalizeOrder(order, "backend"));
+        }
       }
 
-      const data = await res.json();
-      setOrders(data);
-    } catch {
-      setOrders([]);
+      const localOrders = loadLocalOrders();
+      const merged = mergeOrders(backendOrders, localOrders);
+
+      setOrders(merged);
+      return merged;
+    } catch (error) {
+      console.error("Error cargando pedidos:", error);
+
+      const localOrders = loadLocalOrders();
+      setOrders(localOrders);
+      return localOrders;
     }
+  }
+
+  async function loadUsers(productsFromLoad = [], ordersFromLoad = []) {
+    try {
+      const possibleEndpoints = [`${API_URL}/usuarios`, `${API_URL}/users`];
+
+      for (const endpoint of possibleEndpoints) {
+        const res = await fetch(endpoint, {
+          headers: authHeaders,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+
+          if (Array.isArray(data)) {
+            const normalized = data.map((u) => normalizeUser(u, "backend"));
+            setUsers(normalized);
+            return normalized;
+          }
+        }
+      }
+
+      throw new Error("No hay endpoint de usuarios disponible");
+    } catch {
+      const derivedUsers = deriveUsersFromOrdersAndProducts(
+        ordersFromLoad,
+        productsFromLoad
+      );
+      setUsers(derivedUsers);
+      return derivedUsers;
+    }
+  }
+
+  function deriveUsersFromOrdersAndProducts(ordersList, productsList) {
+    const map = new Map();
+
+    ordersList.forEach((order) => {
+      const key =
+        order.usuarioId ||
+        order.usuarioMail ||
+        order.usuarioNombre ||
+        `comprador-${order.id}`;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          id: key,
+          nombre: order.usuarioNombre || "Comprador",
+          apellido: "",
+          mail: order.usuarioMail || "",
+          telefono: "",
+          direccion: "",
+          rol: "COMPRADOR",
+          source: "derived",
+        });
+      }
+    });
+
+    productsList.forEach((product) => {
+      const seller =
+        product.vendedor ||
+        product.usuario ||
+        product.seller ||
+        product.user ||
+        product.empleado;
+
+      const sellerId =
+        seller?.id ||
+        product.vendedorId ||
+        product.usuarioId ||
+        product.sellerId;
+
+      if (!seller && !sellerId) return;
+
+      const key = sellerId || seller?.mail || seller?.email;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          id: key,
+          nombre: seller?.nombre || seller?.name || "Vendedor",
+          apellido: seller?.apellido || "",
+          mail: seller?.mail || seller?.email || "",
+          telefono: seller?.telefono || "",
+          direccion: seller?.direccion || "",
+          rol: "VENDEDOR",
+          source: "derived",
+        });
+      }
+    });
+
+    return Array.from(map.values());
   }
 
   async function loadAll() {
     try {
       setLoading(true);
-      await Promise.all([loadProducts(), loadCategories(), loadOrders()]);
+
+      const [productsLoaded, ordersLoaded] = await Promise.all([
+        loadProducts(),
+        loadOrders(),
+        loadCategories(),
+      ]).then(([p, o]) => [p, o]);
+
+      await loadUsers(productsLoaded || [], ordersLoaded || []);
     } catch (error) {
       console.error(error);
       setMessage("No se pudieron cargar todos los datos del panel.");
@@ -162,17 +476,6 @@ export default function AdminPanel() {
     if (token) loadAll();
   }, [token]);
 
-  const filteredProducts = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-
-    return products.filter((product) => {
-      return (
-        product.nombre?.toLowerCase().includes(term) ||
-        product.descripcion?.toLowerCase().includes(term) ||
-        product.categoriaNombre?.toLowerCase().includes(term)
-      );
-    });
-  }, [products, searchTerm]);
 
   const criticalProducts = useMemo(() => {
     return products.filter((product) => Number(product.stock || 0) <= 3);
@@ -190,22 +493,22 @@ export default function AdminPanel() {
     const salesMap = {};
 
     orders.forEach((order) => {
-      const details =
-        order.detalles ||
-        order.detallePedidos ||
-        order.productos ||
-        order.items ||
-        order.lineas ||
-        [];
+      const details = order.items || [];
 
       details.forEach((item) => {
         const product = item.producto || item.product || item;
-        const productId = product.id || item.productoId || item.productId;
+
+        const productId =
+          product.id || item.productoId || item.productId || item.id;
 
         if (!productId) return;
 
         const productName =
-          product.nombre || item.nombre || `Producto #${productId}`;
+          product.nombre ||
+          product.name ||
+          item.nombre ||
+          item.name ||
+          `Producto #${productId}`;
 
         const quantity = Number(item.cantidad || item.quantity || 1);
 
@@ -221,37 +524,118 @@ export default function AdminPanel() {
       });
     });
 
-    const calculated = Object.values(salesMap)
+    return Object.values(salesMap)
       .sort((a, b) => b.cantidad - a.cantidad)
       .slice(0, 5);
-
-    if (calculated.length > 0) return calculated;
-
-    return products
-      .slice()
-      .sort((a, b) => Number(b.stock || 0) - Number(a.stock || 0))
-      .slice(0, 5)
-      .map((product) => ({
-        id: product.id,
-        nombre: product.nombre,
-        cantidad: 0,
-        fallback: true,
-      }));
-  }, [orders, products]);
-
-  const uniqueClients = useMemo(() => {
-    const ids = new Set();
-
-    orders.forEach((order) => {
-      if (order.usuario?.id) ids.add(order.usuario.id);
-      if (order.usuarioId) ids.add(order.usuarioId);
-    });
-
-    return ids.size;
   }, [orders]);
 
+  const buyers = useMemo(() => {
+    const map = new Map();
+
+    users
+      .filter((u) => normalizeRole(u.rol).includes("COMPRADOR"))
+      .forEach((u) => {
+        map.set(u.id || u.mail, {
+          ...u,
+          pedidos: 0,
+          totalGastado: 0,
+        });
+      });
+
+    orders.forEach((order) => {
+      const key =
+        order.usuarioId ||
+        order.usuarioMail ||
+        order.usuarioNombre ||
+        `comprador-${order.id}`;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          id: key,
+          nombre: order.usuarioNombre || "Comprador",
+          apellido: "",
+          mail: order.usuarioMail || "",
+          telefono: "",
+          direccion: "",
+          rol: "COMPRADOR",
+          source: "derived",
+          pedidos: 0,
+          totalGastado: 0,
+        });
+      }
+
+      const buyer = map.get(key);
+      buyer.pedidos += 1;
+      buyer.totalGastado += Number(order.total || 0);
+    });
+
+    return Array.from(map.values());
+  }, [users, orders]);
+
+  const sellers = useMemo(() => {
+    const map = new Map();
+  
+    users.forEach((u) => {
+      const role = normalizeRole(u.rol || u.role || u.roles || u.authorities);
+  
+      if (!role.includes("VENDEDOR")) return;
+  
+      const key = u.id || u.mail || `${u.nombre}-${u.apellido}`;
+  
+      if (!map.has(key)) {
+        map.set(key, {
+          ...u,
+          productos: 0,
+        });
+      }
+    });
+  
+    products.forEach((product) => {
+      const seller =
+        product.vendedor ||
+        product.usuario ||
+        product.seller ||
+        product.user ||
+        product.empleado;
+  
+      const sellerId =
+        seller?.id ||
+        product.vendedorId ||
+        product.usuarioId ||
+        product.sellerId;
+  
+      if (!seller && !sellerId) return;
+  
+      const key = sellerId || seller?.mail || seller?.email;
+  
+      if (!map.has(key)) {
+        map.set(key, {
+          id: key,
+          nombre: seller?.nombre || seller?.name || "Vendedor",
+          apellido: seller?.apellido || "",
+          mail: seller?.mail || seller?.email || "",
+          telefono: seller?.telefono || "",
+          direccion: seller?.direccion || "",
+          rol: "VENDEDOR",
+          source: "derived",
+          productos: 0,
+        });
+      }
+  
+      const current = map.get(key);
+      current.productos += 1;
+    });
+  
+    return Array.from(map.values());
+  }, [users, products]);
+
+  const uniqueClients = buyers.length;
+
   const stats = {
-    totalRevenue: orders.reduce((acc, order) => acc + Number(order.total || 0), 0),
+    totalRevenue: orders.reduce(
+      (acc, order) => acc + Number(order.total || 0),
+      0
+    ),
     products: products.length,
     activeProducts: products.filter((p) => Number(p.stock || 0) > 0).length,
     criticalInventory: criticalProducts.length,
@@ -259,6 +643,7 @@ export default function AdminPanel() {
     categories: categories.length,
     orders: orders.length,
     users: uniqueClients,
+    sellers: sellers.length,
   };
 
   function openEditProduct(product) {
@@ -422,7 +807,9 @@ export default function AdminPanel() {
   }
 
   async function deleteOrder(id) {
-    const confirmDelete = window.confirm("¿Seguro que querés eliminar este pedido?");
+    const confirmDelete = window.confirm(
+      "¿Seguro que querés eliminar este pedido?"
+    );
 
     if (!confirmDelete) return;
 
@@ -471,30 +858,35 @@ export default function AdminPanel() {
               icon={<BarChart3 size={18} />}
               label="Dashboard"
             />
+
             <SidebarButton
               active={activeTab === "inventory"}
               onClick={() => setActiveTab("inventory")}
               icon={<Package size={18} />}
               label="Inventario"
             />
+
             <SidebarButton
               active={activeTab === "orders"}
               onClick={() => setActiveTab("orders")}
               icon={<ShoppingCart size={18} />}
               label="Pedidos"
             />
+
             <SidebarButton
               active={activeTab === "categories"}
               onClick={() => setActiveTab("categories")}
               icon={<Tags size={18} />}
               label="Categorías"
             />
+
             <SidebarButton
               active={activeTab === "users"}
               onClick={() => setActiveTab("users")}
               icon={<Users size={18} />}
               label="Usuarios"
             />
+
             <SidebarButton
               active={activeTab === "settings"}
               onClick={() => setActiveTab("settings")}
@@ -509,9 +901,7 @@ export default function AdminPanel() {
                 <UserRound size={18} />
               </div>
               <div>
-                <p className="text-sm font-semibold">
-                  {user?.nombre || "Admin"}
-                </p>
+                <p className="text-sm font-semibold">{user?.nombre || "Admin"}</p>
                 <p className="text-xs text-zinc-500">Administrador</p>
               </div>
             </div>
@@ -524,21 +914,9 @@ export default function AdminPanel() {
               <div>
                 <h1 className="text-3xl font-bold">Dashboard administrativo</h1>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Vista general del sistema, inventario, pedidos y categorías.
+                  Datos reales del sistema: inventario, pedidos, usuarios y
+                  categorías.
                 </p>
-              </div>
-
-              <div className="relative w-full lg:w-80">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
-                  size={16}
-                />
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar en productos..."
-                  className="w-full rounded-lg border border-white/10 bg-zinc-950 px-9 py-3 text-sm text-white outline-none focus:border-[#ba203f]"
-                />
               </div>
             </div>
 
@@ -553,7 +931,6 @@ export default function AdminPanel() {
             {activeTab === "dashboard" && (
               <DashboardView
                 stats={stats}
-                products={products}
                 criticalProducts={criticalProducts}
                 outOfStockProducts={outOfStockProducts}
                 highStockProducts={highStockProducts}
@@ -566,7 +943,7 @@ export default function AdminPanel() {
 
             {activeTab === "inventory" && (
               <InventoryView
-                products={filteredProducts}
+                products={products}
                 onEdit={openEditProduct}
                 onDelete={deleteProduct}
               />
@@ -588,7 +965,10 @@ export default function AdminPanel() {
             )}
 
             {activeTab === "users" && (
-              <UsersView orders={orders} usersCount={stats.users} />
+              <UsersView
+                buyers={buyers}
+                sellers={sellers}
+              />
             )}
 
             {activeTab === "settings" && <SettingsView />}
@@ -605,6 +985,7 @@ export default function AdminPanel() {
           saveProduct={saveProduct}
         />
       )}
+
     </div>
   );
 }
@@ -639,7 +1020,7 @@ function MetricCard({ title, value, detail, icon, danger }) {
           </span>
         ) : (
           <span className="rounded bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-300">
-            Activo
+            Real
           </span>
         )}
       </div>
@@ -647,7 +1028,9 @@ function MetricCard({ title, value, detail, icon, danger }) {
       <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
         {title}
       </p>
+
       <p className="mt-2 text-2xl font-bold">{value}</p>
+
       <p className="mt-1 text-xs text-zinc-500">{detail}</p>
     </div>
   );
@@ -655,7 +1038,6 @@ function MetricCard({ title, value, detail, icon, danger }) {
 
 function DashboardView({
   stats,
-  products,
   criticalProducts,
   outOfStockProducts,
   highStockProducts,
@@ -671,13 +1053,19 @@ function DashboardView({
       ? highStockProducts
       : criticalProducts;
 
+  const recentOrders = orders.slice(0, 5);
+
   return (
     <div className="space-y-7">
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Ingresos registrados"
           value={money(stats.totalRevenue)}
-          detail={`${stats.orders} pedidos cargados`}
+          detail={
+            stats.orders > 0
+              ? `${stats.orders} pedidos cargados`
+              : "Sin pedidos registrados"
+          }
           icon={<DollarSign size={20} />}
         />
 
@@ -689,56 +1077,39 @@ function DashboardView({
         />
 
         <MetricCard
-          title="Categorías"
-          value={stats.categories}
-          detail="Organización del catálogo"
-          icon={<Boxes size={20} />}
+          title="Compradores"
+          value={stats.users}
+          detail={
+            stats.users > 0
+              ? "Detectados desde usuarios o pedidos"
+              : "Sin compradores detectados"
+          }
+          icon={<Users size={20} />}
         />
 
         <MetricCard
-          title="Alertas de inventario"
-          value={`${stats.criticalInventory} productos`}
-          detail={`${stats.outOfStock} sin stock`}
-          icon={<AlertTriangle size={20} />}
-          danger
+          title="Vendedores"
+          value={stats.sellers}
+          detail={
+            stats.sellers > 0
+              ? "Detectados desde usuarios o productos"
+              : "Sin vendedores detectados"
+          }
+          icon={<UserRound size={20} />}
         />
-      </div>
-
-      <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Rendimiento general</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Vista visual para presentar el movimiento del sistema.
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <button className="rounded-md border border-white/10 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-white/10">
-              Últimos pedidos
-            </button>
-            <button className="rounded-md bg-black px-4 py-2 text-xs font-semibold text-white">
-              Resumen
-            </button>
-          </div>
-        </div>
-
-        <RevenueChart />
       </div>
 
       <div className="grid gap-7 xl:grid-cols-[0.9fr_1.4fr]">
         <div className="rounded-xl border border-white/10 bg-zinc-900/80">
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-            <div>
-              <h2 className="text-xl font-bold">Actividad reciente</h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                Últimos pedidos registrados.
-              </p>
-            </div>
+          <div className="border-b border-white/10 px-6 py-5">
+            <h2 className="text-xl font-bold">Actividad reciente</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Últimos pedidos registrados.
+            </p>
           </div>
 
           <div className="divide-y divide-white/10">
-            {orders.slice(0, 5).map((order) => (
+            {recentOrders.map((order) => (
               <div key={order.id} className="flex items-center gap-4 px-6 py-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/15 text-green-300">
                   <ShoppingCart size={17} />
@@ -747,15 +1118,18 @@ function DashboardView({
                 <div className="flex-1">
                   <p className="text-sm font-semibold">Pedido #{order.id}</p>
                   <p className="text-xs text-zinc-500">
-                    {order.fecha || "Sin fecha"}
+                    {formatOrderClient(order)} · {formatDate(order.fecha)}
                   </p>
                 </div>
 
-                <p className="text-sm font-bold">{money(order.total)}</p>
+                <div className="text-right">
+                  <p className="text-sm font-bold">{money(order.total)}</p>
+                  <p className="text-xs text-zinc-500">{order.estado}</p>
+                </div>
               </div>
             ))}
 
-            {orders.length === 0 && (
+            {recentOrders.length === 0 && (
               <p className="px-6 py-8 text-sm text-zinc-500">
                 Todavía no hay pedidos registrados.
               </p>
@@ -768,7 +1142,7 @@ function DashboardView({
             <div>
               <h2 className="text-xl font-bold">Resumen de inventario</h2>
               <p className="mt-1 text-sm text-zinc-500">
-                Productos importantes para supervisar.
+                Productos que necesitan seguimiento.
               </p>
             </div>
 
@@ -815,100 +1189,39 @@ function DashboardView({
       <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-6">
         <h2 className="flex items-center gap-2 text-xl font-bold">
           <TrendingUp size={20} className="text-[#ba203f]" />
-          Top 5 productos más vendidos
+          Productos más vendidos
         </h2>
+
         <p className="mt-1 text-sm text-zinc-500">
-          Si no hay detalle de ventas en el backend, se muestra una vista sugerida
-          para presentación.
+          Calculado únicamente desde pedidos con detalle de productos.
         </p>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {topSellingProducts.map((product, index) => (
-            <div
-              key={product.id}
-              className="rounded-xl border border-white/10 bg-black/40 p-4"
-            >
-              <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#ba203f] text-sm font-bold">
-                {index + 1}
+        {topSellingProducts.length > 0 ? (
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {topSellingProducts.map((product, index) => (
+              <div
+                key={product.id}
+                className="rounded-xl border border-white/10 bg-black/40 p-4"
+              >
+                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#ba203f] text-sm font-bold">
+                  {index + 1}
+                </div>
+
+                <p className="font-semibold">{product.nombre}</p>
+
+                <p className="mt-2 text-xs text-zinc-500">
+                  {product.cantidad} unidades vendidas
+                </p>
               </div>
-              <p className="font-semibold">{product.nombre}</p>
-              <p className="mt-2 text-xs text-zinc-500">
-                {product.fallback
-                  ? "Pendiente de ventas reales"
-                  : `${product.cantidad} unidades vendidas`}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5 rounded-lg border border-white/10 bg-black/30 px-5 py-8 text-sm text-zinc-500">
+            Todavía no hay ventas con detalle suficiente para calcular productos
+            más vendidos.
+          </div>
+        )}
       </div>
-    </div>
-  );
-}
-
-function RevenueChart() {
-  const points = [
-    "0,230",
-    "60,210",
-    "120,220",
-    "180,185",
-    "240,195",
-    "300,150",
-    "360,165",
-    "420,105",
-    "480,125",
-    "540,80",
-    "600,95",
-    "660,55",
-    "720,70",
-    "780,40",
-    "840,50",
-  ].join(" ");
-
-  return (
-    <div className="mt-8 h-80 rounded-xl bg-black/25 p-4">
-      <svg viewBox="0 0 860 280" className="h-full w-full">
-        <defs>
-          <linearGradient id="adminGradient" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#ba203f" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#ba203f" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-
-        {[40, 100, 160, 220].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            x2="860"
-            y1={y}
-            y2={y}
-            stroke="rgba(255,255,255,0.08)"
-          />
-        ))}
-
-        <polygon
-          points={`0,260 ${points} 840,260`}
-          fill="url(#adminGradient)"
-        />
-
-        <polyline
-          points={points}
-          fill="none"
-          stroke="#e00014"
-          strokeWidth="5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-
-        <text x="0" y="275" fill="#71717a" fontSize="12">
-          Semana 1
-        </text>
-        <text x="370" y="275" fill="#71717a" fontSize="12">
-          Semana 2
-        </text>
-        <text x="740" y="275" fill="#71717a" fontSize="12">
-          Semana 4
-        </text>
-      </svg>
     </div>
   );
 }
@@ -1114,18 +1427,20 @@ function OrdersView({ orders, onDelete }) {
       <div className="border-b border-white/10 px-6 py-5">
         <h2 className="text-2xl font-bold">Pedidos</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Vista administrativa de los pedidos registrados.
+          Pedidos registrados desde el backend y compras guardadas localmente.
         </p>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
+        <table className="w-full min-w-[880px] text-left text-sm">
           <thead className="bg-black/40 text-xs uppercase tracking-widest text-zinc-500">
             <tr>
               <th className="px-6 py-4">Pedido</th>
               <th className="px-6 py-4">Cliente</th>
               <th className="px-6 py-4">Fecha</th>
+              <th className="px-6 py-4">Estado</th>
               <th className="px-6 py-4">Total</th>
+              <th className="px-6 py-4">Origen</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
           </thead>
@@ -1134,21 +1449,39 @@ function OrdersView({ orders, onDelete }) {
             {orders.map((order) => (
               <tr key={order.id} className="border-t border-white/10">
                 <td className="px-6 py-4 font-semibold">#{order.id}</td>
+
                 <td className="px-6 py-4 text-zinc-300">
-                  {order.usuario?.nombre
-                    ? `${order.usuario.nombre} ${order.usuario.apellido || ""}`
-                    : order.usuario?.mail || "Sin datos"}
+                  {formatOrderClient(order)}
                 </td>
-                <td className="px-6 py-4 text-zinc-300">{order.fecha || "-"}</td>
-                <td className="px-6 py-4 font-semibold">{money(order.total)}</td>
+
+                <td className="px-6 py-4 text-zinc-300">
+                  {formatDate(order.fecha)}
+                </td>
+
+                <td className="px-6 py-4">
+                  <OrderStatusBadge status={order.estado} />
+                </td>
+
+                <td className="px-6 py-4 font-semibold">
+                  {money(order.total)}
+                </td>
+
+                <td className="px-6 py-4 text-zinc-400">
+                  {order.source === "local" ? "Checkout local" : "Backend"}
+                </td>
+
                 <td className="px-6 py-4">
                   <div className="flex justify-end">
-                    <button
-                      onClick={() => onDelete(order.id)}
-                      className="rounded-md border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {order.source === "backend" ? (
+                      <button
+                        onClick={() => onDelete(order.id)}
+                        className="rounded-md border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    ) : (
+                      <span className="text-xs text-zinc-500">Sin acción</span>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -1156,8 +1489,8 @@ function OrdersView({ orders, onDelete }) {
 
             {orders.length === 0 && (
               <tr>
-                <td colSpan="5" className="px-6 py-10 text-center text-zinc-500">
-                  No hay pedidos cargados.
+                <td colSpan="7" className="px-6 py-10 text-center text-zinc-500">
+                  No hay pedidos registrados.
                 </td>
               </tr>
             )}
@@ -1245,35 +1578,94 @@ function CategoriesView({
   );
 }
 
-function UsersView({ orders, usersCount }) {
+function UsersView({ buyers, sellers }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-6">
-      <h2 className="text-2xl font-bold">Usuarios</h2>
-      <p className="mt-1 text-sm text-zinc-500">
-        Vista resumida basada en los clientes que aparecen en pedidos.
-      </p>
+    <div className="space-y-7">
+      <div>
+        <h2 className="text-2xl font-bold">Usuarios</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Separación de compradores y vendedores detectados en el sistema.
+        </p>
+      </div>
 
-      <div className="mt-6 grid gap-5 md:grid-cols-3">
-        <MetricCard
-          title="Clientes detectados"
-          value={usersCount}
-          detail="Calculado desde pedidos"
-          icon={<Users size={20} />}
+      <div className="grid gap-7 xl:grid-cols-2">
+        <UserColumn
+          title="Compradores"
+          subtitle="Usuarios con rol comprador o detectados desde pedidos."
+          users={buyers}
+          emptyText="No hay compradores para mostrar."
+          type="buyer"
         />
 
-        <MetricCard
-          title="Pedidos registrados"
-          value={orders.length}
-          detail="Historial disponible"
-          icon={<ShoppingCart size={20} />}
+        <UserColumn
+          title="Vendedores"
+          subtitle="Usuarios con rol vendedor o detectados desde productos."
+          users={sellers}
+          emptyText="No hay vendedores para mostrar."
+          type="seller"
         />
+      </div>
+    </div>
+  );
+}
 
-        <MetricCard
-          title="Estado"
-          value="Activo"
-          detail="Módulo preparado para ampliación"
-          icon={<ChevronRight size={20} />}
-        />
+function UserColumn({ title, subtitle, users, emptyText, type }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-zinc-900/80">
+      <div className="border-b border-white/10 px-6 py-5">
+        <h3 className="text-xl font-bold">{title}</h3>
+        <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+      </div>
+
+      <div className="divide-y divide-white/10">
+        {users.map((user) => (
+          <div key={user.id || user.mail} className="px-6 py-5">
+            <div>
+              <p className="text-lg font-semibold">
+                {user.nombre} {user.apellido}
+              </p>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                {user.mail || "Sin email registrado"}
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded bg-[#ba203f]/15 px-2 py-1 text-xs font-semibold text-[#f0b3b3]">
+                  {normalizeRole(user.rol) || "SIN_ROL"}
+                </span>
+
+                {user.source === "backend" ? (
+                  <span className="rounded bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-300">
+                    Registrado
+                  </span>
+                ) : (
+                  <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
+                    Detectado
+                  </span>
+                )}
+              </div>
+
+              {type === "buyer" && (
+                <p className="mt-3 text-sm text-zinc-400">
+                  Pedidos: {user.pedidos || 0} · Total comprado:{" "}
+                  {money(user.totalGastado || 0)}
+                </p>
+              )}
+
+              {type === "seller" && (
+                <p className="mt-3 text-sm text-zinc-400">
+                  Productos publicados: {user.productos || 0}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {users.length === 0 && (
+          <p className="px-6 py-10 text-center text-sm text-zinc-500">
+            {emptyText}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1291,7 +1683,8 @@ function SettingsView() {
         <div className="rounded-xl border border-white/10 bg-black/40 p-5">
           <h3 className="font-bold">Rol administrador</h3>
           <p className="mt-2 text-sm text-zinc-400">
-            Puede gestionar productos, categorías y pedidos del sistema.
+            Puede gestionar productos, categorías, pedidos y usuarios si el
+            backend lo permite.
           </p>
         </div>
 

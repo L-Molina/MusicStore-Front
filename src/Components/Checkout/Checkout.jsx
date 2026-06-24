@@ -1,37 +1,171 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useCart } from "../../hooks/useCart.js";
+import { getProductImageUrl } from "../../utils/images";
 import MaterialSymbol from "../MaterialSymbol/MaterialSymbol";
 import "./Checkout.css";
-import { useNavigate } from "react-router-dom";
-import { getProductImageUrl } from "../../utils/images"
 
-const SHIPPING = 25;
+const SHIPPING_OPTIONS = [
+  {
+    id: "retiro",
+    label: "Retiro en tienda",
+    description: "Sin costo de envío",
+    price: 0,
+  },
+  {
+    id: "estandar",
+    label: "Envío estándar",
+    description: "Entrega estimada 3 a 5 días hábiles",
+    price: 2500,
+  },
+  {
+    id: "express",
+    label: "Envío express",
+    description: "Entrega estimada 24 a 48 hs",
+    price: 4500,
+  },
+];
 
-export default function Carrito() {
-  
-const navigate = useNavigate();
-  const { items, total, clear } = useCart();
-  const user = JSON.parse(localStorage.getItem("user"))
-const usuarioId = user?.id
-const [loading, setLoading] = useState(false)
+function money(value) {
+  const number = Number(value || 0);
 
+  return `$${number.toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function getDiscountAmount(item) {
+  const price = Number(item?.price || 0);
+
+  if (!price) return 0;
+
+  if (item?.discountAmount !== undefined) {
+    return Math.min(Number(item.discountAmount || 0), price);
+  }
+
+  if (item?.descuento !== undefined) {
+    return Math.min(Number(item.descuento || 0), price);
+  }
+
+  if (item?.discountedPrice !== undefined) {
+    const discounted = Number(item.discountedPrice || 0);
+    if (discounted >= 0 && discounted < price) {
+      return price - discounted;
+    }
+  }
+
+  const discountPercent = Number(item?.discount || 0);
+
+  if (discountPercent > 0 && discountPercent <= 100) {
+    return Math.min((price * discountPercent) / 100, price);
+  }
+
+  return 0;
+}
+
+function getFinalUnitPrice(item) {
+  const price = Number(item?.price || 0);
+  const discountAmount = getDiscountAmount(item);
+
+  return Math.max(price - discountAmount, 0);
+}
+
+function getLineTotal(item) {
+  return getFinalUnitPrice(item) * Number(item?.quantity || 0);
+}
+
+function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch {
+    return null;
+  }
+}
+
+function saveLocalOrder({ items, subtotal, shipping, total, paymentMethod, user }) {
+  const order = {
+    id: `MS-${Date.now()}`,
+    fecha: new Date().toISOString(),
+    estado: "Procesando",
+    status: "Procesando",
+    total,
+    subtotal,
+    envio: shipping.price,
+    metodoEnvio: shipping.label,
+    metodoPago: paymentMethod,
+    usuarioId: user?.id,
+    usuarioMail: user?.mail || user?.email,
+    items: items.map((item) => ({
+      id: item.id,
+      nombre: item.name,
+      cantidad: item.quantity,
+      precioUnitario: getFinalUnitPrice(item),
+      precioOriginal: Number(item.price || 0),
+      descuento: getDiscountAmount(item),
+      subtotal: getLineTotal(item),
+      category: item.category,
+      fotos: item.fotos || [],
+      foto: item.foto || null,
+    })),
+  };
+
+  const keys = [
+    "orders",
+    "compras",
+    user?.id ? `orders_user_${user.id}` : null,
+    user?.mail ? `orders_user_${user.mail}` : null,
+    user?.email ? `orders_user_${user.email}` : null,
+  ].filter(Boolean);
+
+  keys.forEach((key) => {
+    try {
+      const current = JSON.parse(localStorage.getItem(key) || "[]");
+      const next = Array.isArray(current) ? [order, ...current] : [order];
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      localStorage.setItem(key, JSON.stringify([order]));
+    }
+  });
+
+  return order;
+}
+
+export default function Checkout() {
+  const navigate = useNavigate();
+  const { items, clear } = useCart();
+
+  const user = getCurrentUser();
+  const usuarioId = user?.id;
+
+  const [loading, setLoading] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("");
 
-  const subtotalProductos = total;
-  const conEnvío = items.length > 0 ? SHIPPING : 0;
-  const granTotal = subtotalProductos + conEnvío;
+  const selectedShippingId =
+    localStorage.getItem("musicstore_shipping_method") || "estandar";
+
+  const selectedShipping =
+    SHIPPING_OPTIONS.find((option) => option.id === selectedShippingId) ||
+    SHIPPING_OPTIONS[1];
+
+  const subtotalProductos = items.reduce(
+    (acc, item) => acc + getLineTotal(item),
+    0
+  );
+
+  const envio = items.length > 0 ? selectedShipping.price : 0;
+  const granTotal = subtotalProductos + envio;
 
   const paymentMethods = [
     {
       id: "credito",
-      title: "Tarjeta de Crédito",
+      title: "Tarjeta de crédito",
       icon: "credit_card",
     },
     {
       id: "debito",
-      title: "Tarjeta de Débito",
+      title: "Tarjeta de débito",
       icon: "payment_card",
     },
     {
@@ -41,7 +175,7 @@ const [loading, setLoading] = useState(false)
     },
     {
       id: "efectivo",
-      title: "Efectivo (Retirar en el local)",
+      title: "Efectivo al retirar en tienda",
       icon: "attach_money",
     },
     {
@@ -50,36 +184,88 @@ const [loading, setLoading] = useState(false)
       icon: "account_balance",
     },
   ];
-const handleCheckout = async () => {
-  try {
-    setLoading(true)
 
-    const token = localStorage.getItem("token")
+  async function handleCheckout() {
+    if (!selectedPayment) {
+      alert("Seleccioná un método de pago.");
+      return;
+    }
 
-    const res = await fetch(
-      `http://localhost:8080/carrito/checkout/${usuarioId}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    if (items.length === 0) {
+      alert("Tu carrito está vacío.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem("token");
+
+      saveLocalOrder({
+        items,
+        subtotal: subtotalProductos,
+        shipping: selectedShipping,
+        total: granTotal,
+        paymentMethod: selectedPayment,
+        user,
+      });
+
+      if (usuarioId && token) {
+        try {
+          const res = await fetch(
+            `http://localhost:8080/carrito/checkout/${usuarioId}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (res.ok) {
+            await res.json().catch(() => null);
+          }
+        } catch (error) {
+          console.error("El checkout backend falló, pero se guardó local:", error);
+        }
       }
-    )
 
-    if (!res.ok) return
-
-    await res.json()
-
-    clear() // 👈 IMPORTANTE: vacía el carrito frontend
-navigate("/");
-    alert("Compra realizada con éxito 🎉")
-
-  } catch (err) {
-    console.error("Error checkout:", err)
-  } finally {
-    setLoading(false)
+      clear();
+      alert("Compra realizada con éxito 🎉");
+      navigate("/perfil");
+    } catch (err) {
+      console.error("Error checkout:", err);
+      alert("No se pudo finalizar la compra.");
+    } finally {
+      setLoading(false);
+    }
   }
-}
+
+  if (items.length === 0) {
+    return (
+      <main className="mx-auto min-h-screen max-w-3xl px-8 pb-24 pt-32 text-center font-sans">
+        <MaterialSymbol className="mb-4 text-6xl text-zinc-600">
+          shopping_cart
+        </MaterialSymbol>
+
+        <h1 className="text-4xl font-extrabold uppercase tracking-tighter text-[#e2e2e2]">
+          No hay productos para pagar
+        </h1>
+
+        <p className="mt-3 text-zinc-500">
+          Agregá productos al carrito antes de finalizar la compra.
+        </p>
+
+        <button
+          onClick={() => navigate("/catalogo")}
+          className="mt-8 bg-[#ba203f] px-8 py-4 text-sm font-semibold uppercase tracking-wide text-white hover:brightness-110"
+        >
+          Ir al catálogo
+        </button>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-8 pb-24 pt-32 font-sans">
       <div className="mb-12 flex flex-col gap-2">
@@ -87,98 +273,144 @@ navigate("/");
           Checkout
         </h1>
 
-        <p className="text-zinc-500">Cómo querés pagar?</p>
+        <p className="text-zinc-500">Elegí cómo querés pagar y recibir tu compra.</p>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-        {/* MÉTODOS DE PAGO */}
-        <div className="space-y-4 lg:col-span-8">
-          {paymentMethods.map((method) => {
-            const isSelected = selectedPayment === method.id;
+        <div className="space-y-8 lg:col-span-8">
+          <section>
+            <h2 className="mb-4 text-2xl font-bold uppercase tracking-wide text-[#e2e2e2]">
+              Método de pago
+            </h2>
 
-            return (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => setSelectedPayment(method.id)}
-                className={`group relative flex w-full flex-col gap-4 rounded-lg border p-6 text-left transition-all duration-300 md:flex-row
-                  ${
-                    isSelected
-                      ? "border-[#ba203f] bg-[#242628]"
-                      : "border-zinc-800 bg-[#1a1c1c] hover:border-zinc-500"
-                  }
-                `}
-              >
-                <div className="flex items-center justify-center rounded bg-zinc-900 p-4">
-                  <MaterialSymbol>{method.icon}</MaterialSymbol>
-                </div>
+            <div className="space-y-4">
+              {paymentMethods.map((method) => {
+                const isSelected = selectedPayment === method.id;
 
-                <div className="flex grow items-center justify-between gap-4">
-                  <span className="font-sans text-2xl font-bold text-[#e2e2e2]">
-                    {method.title}
-                  </span>
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setSelectedPayment(method.id)}
+                    className={`group relative flex w-full flex-col gap-4 rounded-lg border p-6 text-left transition-all duration-300 md:flex-row ${
+                      isSelected
+                        ? "border-[#ba203f] bg-[#242628]"
+                        : "border-zinc-800 bg-[#1a1c1c] hover:border-zinc-500"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center rounded bg-zinc-900 p-4 text-white">
+                      <MaterialSymbol>{method.icon}</MaterialSymbol>
+                    </div>
 
-                  <div
-                    className={`size-6 rounded-full border-2 transition-all
-                      ${
-                        isSelected
-                          ? "border-[#ba203f] bg-[#ba203f]"
-                          : "border-zinc-500"
-                      }
-                    `}
-                  />
-                </div>
-              </button>
-            );
-          })}
+                    <div className="flex grow items-center justify-between gap-4">
+                      <span className="font-sans text-2xl font-bold text-[#e2e2e2]">
+                        {method.title}
+                      </span>
+
+                      <div
+                        className={`size-6 rounded-full border-2 transition-all ${
+                          isSelected
+                            ? "border-[#ba203f] bg-[#ba203f]"
+                            : "border-zinc-500"
+                        }`}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-2xl font-bold uppercase tracking-wide text-[#e2e2e2]">
+              Método de entrega
+            </h2>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              {SHIPPING_OPTIONS.map((option) => {
+                const isSelected = selectedShipping.id === option.id;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("musicstore_shipping_method", option.id);
+                      window.location.reload();
+                    }}
+                    className={`rounded-lg border p-5 text-left transition ${
+                      isSelected
+                        ? "border-[#ba203f] bg-[#ba203f]/10"
+                        : "border-zinc-800 bg-[#1a1c1c] hover:border-zinc-500"
+                    }`}
+                  >
+                    <p className="font-bold text-[#e2e2e2]">{option.label}</p>
+                    <p className="mt-2 text-sm text-zinc-500">
+                      {option.description}
+                    </p>
+                    <p className="mt-4 text-xl font-bold text-[#ba203f]">
+                      {money(option.price)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
         </div>
 
-        {/* RESUMEN */}
         <div className="lg:sticky lg:top-24 lg:col-span-4">
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-8">
             <h2 className="mb-8 border-b border-zinc-800 pb-4 font-sans text-2xl font-bold uppercase tracking-widest text-[#e2e2e2]">
               Resumen
             </h2>
 
-            {/* PRODUCTOS */}
             <div className="mb-8 max-h-[420px] space-y-4 overflow-y-auto pr-2">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex gap-4 rounded-lg border border-zinc-800 bg-[#1a1c1c] p-4"
-                >
-                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-zinc-900">
-                    <img
-                      src={getProductImageUrl(item)}
-                      alt={item.name}
-                      className="size-full object-cover"
-                    />
-                  </div>
+              {items.map((item) => {
+                const unitPrice = getFinalUnitPrice(item);
+                const lineTotal = getLineTotal(item);
 
-                  <div className="flex min-w-0 grow flex-col justify-between">
-                    <div>
-                      <p className="line-clamp-2 font-sans text-sm font-bold text-[#e2e2e2]">
-                        {item.name}
-                      </p>
-
-                      <p className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500">
-                        {item.cartLine ?? item.category}
-                      </p>
+                return (
+                  <div
+                    key={item.itemId || item.id}
+                    className="flex gap-4 rounded-lg border border-zinc-800 bg-[#1a1c1c] p-4"
+                  >
+                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-zinc-900">
+                      <img
+                        src={getProductImageUrl(item)}
+                        alt={item.name}
+                        className="size-full object-cover"
+                      />
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                        x{item.quantity}
-                      </span>
+                    <div className="flex min-w-0 grow flex-col justify-between">
+                      <div>
+                        <p className="line-clamp-2 font-sans text-sm font-bold text-[#e2e2e2]">
+                          {item.name}
+                        </p>
 
-                      <span className="font-sans text-sm font-bold text-[#e2e2e2]">
-                        
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
+                        <p className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500">
+                          {item.cartLine ?? item.category}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                          x{item.quantity}
+                        </span>
+
+                        <div className="text-right">
+                          <span className="font-sans text-sm font-bold text-[#e2e2e2]">
+                            {money(lineTotal)}
+                          </span>
+                          <p className="text-[10px] text-zinc-500">
+                            {money(unitPrice)} c/u
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mb-8 space-y-4">
@@ -188,18 +420,17 @@ navigate("/");
                 </span>
 
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
-                  ${subtotalProductos.toFixed(2)}
-                  
+                  {money(subtotalProductos)}
                 </span>
               </div>
 
               <div className="flex justify-between text-zinc-400">
                 <span className="text-sm font-semibold uppercase tracking-wide">
-                  Envío (Asegurado)
+                  Envío
                 </span>
 
                 <span className="text-sm font-semibold text-[#e2e2e2] tabular-nums">
-                  ${conEnvío.toFixed(2)}
+                  {money(envio)}
                 </span>
               </div>
             </div>
@@ -210,25 +441,21 @@ navigate("/");
               </span>
 
               <span className="font-sans text-3xl font-bold text-[#ba203f] tabular-nums">
-                ${granTotal.toFixed(2)}
+                {money(granTotal)}
               </span>
             </div>
 
-            <div className="space-y-4">
-              <button
-  type="button"
-  disabled={!selectedPayment || loading}
-  onClick={handleCheckout}
-  className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
->
-  {loading ? "Procesando..." : "Finalizar compra"}
-</button>
-            </div>
+            <button
+              type="button"
+              disabled={!selectedPayment || loading}
+              onClick={handleCheckout}
+              className="w-full bg-[#ba203f] py-4 font-sans text-2xl font-bold uppercase tracking-widest text-white brightness-110 transition-all duration-150 hover:brightness-125 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Procesando..." : "Finalizar compra"}
+            </button>
           </div>
         </div>
       </div>
-
-      
     </main>
   );
 }

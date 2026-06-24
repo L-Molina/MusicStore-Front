@@ -7,6 +7,7 @@ import {
   Plus,
   Save,
   Search,
+  ShoppingCart,
   Trash2,
   TrendingUp,
   X,
@@ -19,10 +20,25 @@ const API_URL = "http://localhost:8080";
 
 function money(value) {
   const number = Number(value || 0);
+
   return `$${number.toLocaleString("es-AR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+function formatDate(date) {
+  if (!date) return "Sin fecha";
+
+  try {
+    return new Date(date).toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return date;
+  }
 }
 
 function getDiscountAmount(product) {
@@ -46,12 +62,91 @@ function getImage(product) {
   return `data:image/jpeg;base64,${file}`;
 }
 
+function getOrderItems(order) {
+  return (
+    order.items ||
+    order.productos ||
+    order.detalles ||
+    order.detallePedidos ||
+    order.detalleProductos ||
+    order.cart ||
+    order.lineas ||
+    []
+  );
+}
+
+function getItemProductId(item) {
+  const product = item.producto || item.product || item;
+
+  return String(
+    product.id ||
+      item.productoId ||
+      item.productId ||
+      item.id ||
+      ""
+  );
+}
+
+function getItemName(item) {
+  const product = item.producto || item.product || item;
+
+  return (
+    product.nombre ||
+    product.name ||
+    item.nombre ||
+    item.name ||
+    "Producto"
+  );
+}
+
+function getItemQuantity(item) {
+  return Number(item.cantidad || item.quantity || 1);
+}
+
+function getItemUnitPrice(item) {
+  const product = item.producto || item.product || item;
+
+  return Number(
+    item.precioUnitario ||
+      item.precio ||
+      item.price ||
+      product.precio ||
+      product.price ||
+      0
+  );
+}
+
+function normalizeOrder(order, source = "local") {
+  return {
+    ...order,
+    id: order.id || order.orderId || `LOCAL-${order.fecha || Date.now()}`,
+    source,
+    fecha: order.fecha || order.date || order.createdAt || order.fechaCompra || "",
+    estado: order.estado || order.status || "Procesando",
+    total: Number(order.total || order.totalFinal || order.precioTotal || 0),
+    usuarioNombre:
+      order.usuario?.nombre ||
+      order.usuarioNombre ||
+      order.nombreUsuario ||
+      "Cliente",
+    usuarioMail:
+      order.usuario?.mail ||
+      order.usuario?.email ||
+      order.usuarioMail ||
+      order.email ||
+      order.mail ||
+      "",
+    items: getOrderItems(order),
+  };
+}
+
 export default function VendedorPanel() {
   const { token, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [sellerOrders, setSellerOrders] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("all");
@@ -115,6 +210,7 @@ export default function VendedorPanel() {
     );
 
     setProducts(formatted);
+    return formatted;
   }
 
   async function loadCategories() {
@@ -125,10 +221,113 @@ export default function VendedorPanel() {
     setCategories(data);
   }
 
+  function loadLocalOrders() {
+    const keys = Object.keys(localStorage).filter((key) => {
+      return (
+        key === "orders" ||
+        key === "compras" ||
+        key.startsWith("orders_user_")
+      );
+    });
+
+    let orders = [];
+
+    keys.forEach((key) => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+
+        const parsed = JSON.parse(raw);
+
+        if (Array.isArray(parsed)) {
+          orders = [
+            ...orders,
+            ...parsed.map((order) => normalizeOrder(order, "local")),
+          ];
+        }
+      } catch {
+        // Ignoramos claves inválidas
+      }
+    });
+
+    return orders;
+  }
+
+  async function loadBackendSellerOrders() {
+    try {
+      const res = await fetch(`${API_URL}/pedidos/mis-productos`, {
+        headers: authHeaders,
+      });
+
+      if (!res.ok) return [];
+
+      const data = await res.json();
+
+      if (!Array.isArray(data)) return [];
+
+      return data.map((order) => normalizeOrder(order, "backend"));
+    } catch {
+      return [];
+    }
+  }
+
+  async function loadSellerOrders(sellerProducts) {
+    const sellerProductIds = new Set(
+      sellerProducts.map((product) => String(product.id))
+    );
+
+    const localOrders = loadLocalOrders();
+    const backendOrders = await loadBackendSellerOrders();
+
+    const allOrders = [...backendOrders, ...localOrders];
+
+    const filtered = allOrders
+      .map((order) => {
+        const sellerItems = getOrderItems(order).filter((item) => {
+          const productId = getItemProductId(item);
+          return sellerProductIds.has(productId);
+        });
+
+        const sellerTotal = sellerItems.reduce((acc, item) => {
+          return acc + getItemUnitPrice(item) * getItemQuantity(item);
+        }, 0);
+
+        return {
+          ...order,
+          sellerItems,
+          sellerTotal,
+        };
+      })
+      .filter((order) => order.sellerItems.length > 0);
+
+    const unique = filtered.filter((order, index, self) => {
+      const key = `${order.id}-${order.sellerTotal}`;
+
+      return (
+        index ===
+        self.findIndex((other) => `${other.id}-${other.sellerTotal}` === key)
+      );
+    });
+
+    unique.sort((a, b) => {
+      const dateA = new Date(a.fecha || 0).getTime();
+      const dateB = new Date(b.fecha || 0).getTime();
+      return dateB - dateA;
+    });
+
+    setSellerOrders(unique);
+  }
+
   async function loadAll() {
     try {
       setLoading(true);
-      await Promise.all([loadProducts(), loadCategories()]);
+
+      const loadedProducts = await loadProducts();
+
+      await Promise.all([
+        loadCategories(),
+        loadSellerOrders(loadedProducts || []),
+      ]);
     } catch (error) {
       console.error(error);
       setMessage("No se pudieron cargar los datos de gestión de inventario.");
@@ -186,6 +385,11 @@ export default function VendedorPanel() {
     totalInventoryValue: products.reduce(
       (acc, product) =>
         acc + Number(product.precio || 0) * Number(product.stock || 0),
+      0
+    ),
+    receivedOrders: sellerOrders.length,
+    sellerRevenue: sellerOrders.reduce(
+      (acc, order) => acc + Number(order.sellerTotal || 0),
       0
     ),
   };
@@ -283,7 +487,9 @@ export default function VendedorPanel() {
       }
 
       await loadProducts();
+      await loadSellerOrders(products);
       closeProductModal();
+
       setMessage(
         editingProduct
           ? "Producto actualizado correctamente."
@@ -310,7 +516,9 @@ export default function VendedorPanel() {
 
       if (!res.ok) throw new Error("No se pudo eliminar el producto");
 
-      await loadProducts();
+      const loadedProducts = await loadProducts();
+      await loadSellerOrders(loadedProducts || []);
+
       setMessage("Producto eliminado correctamente.");
     } catch (error) {
       console.error(error);
@@ -333,12 +541,14 @@ export default function VendedorPanel() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm text-zinc-400">Panel de vendedor</p>
+
               <h1 className="mt-2 text-4xl font-bold">
                 Gestión de inventario
               </h1>
+
               <p className="mt-2 text-sm text-zinc-400">
                 Hola, {user?.nombre || "vendedor"}. Gestioná tus productos,
-                stock, descuentos e imágenes.
+                stock, descuentos, imágenes y pedidos recibidos.
               </p>
             </div>
 
@@ -367,27 +577,36 @@ export default function VendedorPanel() {
             </div>
           )}
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <StatCard
               title="Valor del inventario"
               value={money(stats.totalInventoryValue)}
               detail="Según precio y stock actual"
             />
+
             <StatCard
               title="Productos activos"
               value={stats.activeProducts}
               detail={`${stats.totalProducts} productos propios`}
             />
+
             <StatCard
               title="Con descuento"
               value={stats.discounts}
               detail="Productos con promoción activa"
             />
+
             <StatCard
               title="Stock crítico"
               value={stats.lowStock + stats.noStock}
               detail="Sin stock o bajo stock"
               danger
+            />
+
+            <StatCard
+              title="Pedidos recibidos"
+              value={stats.receivedOrders}
+              detail={`${money(stats.sellerRevenue)} en productos vendidos`}
             />
           </div>
         </div>
@@ -408,6 +627,13 @@ export default function VendedorPanel() {
           >
             <Package size={16} /> Inventario
           </TabButton>
+
+          <TabButton
+            active={activeTab === "orders"}
+            onClick={() => setActiveTab("orders")}
+          >
+            <ShoppingCart size={16} /> Pedidos recibidos
+          </TabButton>
         </div>
 
         {activeTab === "dashboard" && (
@@ -416,6 +642,7 @@ export default function VendedorPanel() {
             stats={stats}
             onEdit={openEditProductModal}
             onDelete={deleteProduct}
+            sellerOrders={sellerOrders}
           />
         )}
 
@@ -430,6 +657,8 @@ export default function VendedorPanel() {
             onDelete={deleteProduct}
           />
         )}
+
+        {activeTab === "orders" && <SellerOrders orders={sellerOrders} />}
       </section>
 
       {showProductModal && (
@@ -452,6 +681,7 @@ function StatCard({ title, value, detail, danger }) {
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
         {title}
       </p>
+
       <p
         className={`mt-2 text-2xl font-bold ${
           danger ? "text-[#ba203f]" : "text-white"
@@ -459,6 +689,7 @@ function StatCard({ title, value, detail, danger }) {
       >
         {value}
       </p>
+
       <p className="mt-1 text-xs text-zinc-500">{detail}</p>
     </div>
   );
@@ -479,31 +710,45 @@ function TabButton({ active, onClick, children }) {
   );
 }
 
-function Dashboard({ products, stats, onEdit, onDelete }) {
+function Dashboard({ products, onEdit, onDelete, sellerOrders }) {
   const recentProducts = products.slice(0, 5);
   const lowStock = products.filter(
     (p) => Number(p.stock) > 0 && Number(p.stock) <= 3
   );
   const noStock = products.filter((p) => Number(p.stock) === 0);
   const highStock = products.filter((p) => Number(p.stock) > 20);
+  const recentOrders = sellerOrders.slice(0, 3);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-      <div className="rounded-xl border border-white/10 bg-zinc-900/80">
-        <div className="border-b border-white/10 px-6 py-5">
-          <h2 className="text-xl font-bold">Tus productos recientes</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            Vista rápida de tus publicaciones.
-          </p>
+      <div className="space-y-6">
+        <div className="rounded-xl border border-white/10 bg-zinc-900/80">
+          <div className="border-b border-white/10 px-6 py-5">
+            <h2 className="text-xl font-bold">Tus productos recientes</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Vista rápida de tus publicaciones.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <ProductTable
+              products={recentProducts}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              compact
+            />
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <ProductTable
-            products={recentProducts}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            compact
-          />
+        <div className="rounded-xl border border-white/10 bg-zinc-900/80">
+          <div className="border-b border-white/10 px-6 py-5">
+            <h2 className="text-xl font-bold">Últimos pedidos recibidos</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Pedidos que incluyen productos publicados por vos.
+            </p>
+          </div>
+
+          <SellerOrdersCompact orders={recentOrders} />
         </div>
       </div>
 
@@ -563,10 +808,11 @@ function Dashboard({ products, stats, onEdit, onDelete }) {
             <TrendingUp size={20} />
             Resumen del vendedor
           </h2>
+
           <p className="mt-3 text-sm text-zinc-300">
             Este panel permite controlar tus productos publicados, actualizar
-            precios, stock, descuentos e imágenes sin afectar productos de otros
-            vendedores.
+            precios, stock, descuentos, imágenes y revisar pedidos asociados a
+            tus productos.
           </p>
         </div>
       </div>
@@ -745,6 +991,126 @@ function ProductTable({ products, onEdit, onDelete, compact }) {
   );
 }
 
+function SellerOrdersCompact({ orders }) {
+  if (orders.length === 0) {
+    return (
+      <p className="px-6 py-8 text-sm text-zinc-500">
+        Todavía no hay pedidos asociados a tus productos.
+      </p>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-white/10">
+      {orders.map((order) => (
+        <div key={`${order.id}-${order.sellerTotal}`} className="px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Pedido #{order.id}</p>
+              <p className="text-xs text-zinc-500">
+                {order.usuarioNombre || "Cliente"} · {formatDate(order.fecha)}
+              </p>
+            </div>
+
+            <p className="font-bold text-[#ba203f]">
+              {money(order.sellerTotal)}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SellerOrders({ orders }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-zinc-900/80">
+      <div className="border-b border-white/10 px-6 py-5">
+        <h2 className="text-xl font-bold">Pedidos recibidos</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Pedidos de compradores que incluyen productos publicados por vos.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-left text-sm">
+          <thead className="bg-white/5 text-xs uppercase tracking-wide text-zinc-500">
+            <tr>
+              <th className="px-6 py-4">Pedido</th>
+              <th className="px-6 py-4">Cliente</th>
+              <th className="px-6 py-4">Fecha</th>
+              <th className="px-6 py-4">Productos tuyos</th>
+              <th className="px-6 py-4">Total para vos</th>
+              <th className="px-6 py-4">Estado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {orders.map((order) => (
+              <tr
+                key={`${order.id}-${order.sellerTotal}`}
+                className="border-t border-white/10"
+              >
+                <td className="px-6 py-4 font-semibold text-white">
+                  #{order.id}
+                </td>
+
+                <td className="px-6 py-4 text-zinc-300">
+                  <p>{order.usuarioNombre || "Cliente"}</p>
+                  <p className="text-xs text-zinc-500">
+                    {order.usuarioMail || "Sin email"}
+                  </p>
+                </td>
+
+                <td className="px-6 py-4 text-zinc-300">
+                  {formatDate(order.fecha)}
+                </td>
+
+                <td className="px-6 py-4">
+                  <div className="space-y-2">
+                    {order.sellerItems.map((item, index) => (
+                      <div
+                        key={index}
+                        className="rounded-md bg-black/40 px-3 py-2"
+                      >
+                        <p className="font-semibold text-white">
+                          {getItemName(item)}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          Cantidad: {getItemQuantity(item)} · Precio unitario:{" "}
+                          {money(getItemUnitPrice(item))}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </td>
+
+                <td className="px-6 py-4 font-bold text-[#ba203f]">
+                  {money(order.sellerTotal)}
+                </td>
+
+                <td className="px-6 py-4">
+                  <span className="rounded bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-300">
+                    {order.estado || "Procesando"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan="6" className="px-6 py-10 text-center text-zinc-500">
+                  Todavía no hay pedidos asociados a tus productos.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function ProductModal({
   editingProduct,
   productForm,
@@ -764,6 +1130,7 @@ function ProductModal({
             <h2 className="text-2xl font-bold">
               {editingProduct ? "Editar producto" : "Publicar producto"}
             </h2>
+
             <p className="mt-1 text-sm text-zinc-500">
               Completá la información del producto.
             </p>

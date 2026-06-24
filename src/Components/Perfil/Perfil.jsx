@@ -109,25 +109,26 @@ export default function Perfil() {
   }
 
   function loadLocalOrders() {
+    const currentUserId = String(userId || "");
+    const currentUserMail = String(user?.mail || user?.email || "").toLowerCase();
+  
     const possibleKeys = [
-      `orders_user_${userId}`,
-      `orders_user_${user?.mail}`,
-      `orders_user_${user?.email}`,
+      userId ? `orders_user_${userId}` : null,
+      user?.mail ? `orders_user_${user.mail}` : null,
+      user?.email ? `orders_user_${user.email}` : null,
       "orders",
       "compras",
-    ];
-
+    ].filter(Boolean);
+  
     let savedOrders = [];
-
+  
     possibleKeys.forEach((key) => {
-      if (!key) return;
-
       try {
         const raw = localStorage.getItem(key);
         if (!raw) return;
-
+  
         const parsed = JSON.parse(raw);
-
+  
         if (Array.isArray(parsed)) {
           savedOrders = [...savedOrders, ...parsed];
         }
@@ -136,20 +137,60 @@ export default function Perfil() {
       }
     });
 
-    const uniqueOrders = savedOrders.filter((order, index, self) => {
-      const id = order.id || order.orderId || order.fecha || index;
+  
+    const onlyCurrentUserOrders = savedOrders.filter((order) => {
+      const orderUserId = String(
+        order.usuarioId ||
+          order.userId ||
+          order.usuario?.id ||
+          order.compradorId ||
+          ""
+      );
+  
+      const orderUserMail = String(
+        order.usuarioMail ||
+          order.mail ||
+          order.email ||
+          order.usuario?.mail ||
+          order.usuario?.email ||
+          ""
+      ).toLowerCase();
+  
+      const matchesById =
+        currentUserId && orderUserId && currentUserId === orderUserId;
+  
+      const matchesByMail =
+        currentUserMail && orderUserMail && currentUserMail === orderUserMail;
+  
+      return matchesById || matchesByMail;
+    });
+  
+    const uniqueOrders = onlyCurrentUserOrders.filter((order, index, self) => {
+      const id =
+        order.id ||
+        order.orderId ||
+        `${order.usuarioId || order.usuarioMail || ""}-${order.fecha || ""}-${
+          order.total || ""
+        }`;
+  
       return (
         index ===
-        self.findIndex((other, otherIndex) => {
-          const otherId = other.id || other.orderId || other.fecha || otherIndex;
+        self.findIndex((other) => {
+          const otherId =
+            other.id ||
+            other.orderId ||
+            `${other.usuarioId || other.usuarioMail || ""}-${other.fecha || ""}-${
+              other.total || ""
+            }`;
+  
           return otherId === id;
         })
       );
     });
-
+  
     setOrders(uniqueOrders.reverse());
   }
-
+  
   async function saveProfile(e) {
     e.preventDefault();
 
@@ -183,30 +224,37 @@ export default function Perfil() {
       );
     }
   }
-
+  function isCompletedOrder(order) {
+    const estado = String(order.estado || order.status || "").toLowerCase();
+  
+    return (
+      estado.includes("entregado") ||
+      estado.includes("finalizado") ||
+      estado.includes("completado") ||
+      estado.includes("completed") ||
+      estado.includes("delivered")
+    );
+  }
+  
+  function isCancelledOrder(order) {
+    const estado = String(order.estado || order.status || "").toLowerCase();
+  
+    return (
+      estado.includes("cancelado") ||
+      estado.includes("cancelled") ||
+      estado.includes("rechazado")
+    );
+  }
+  
   const activeOrders = useMemo(() => {
     return orders.filter((order) => {
-      const estado = String(order.estado || order.status || "").toLowerCase();
-
-      return (
-        estado.includes("pendiente") ||
-        estado.includes("procesando") ||
-        estado.includes("en camino") ||
-        estado.includes("activo") ||
-        !estado
-      );
+      return !isCompletedOrder(order) && !isCancelledOrder(order);
     });
   }, [orders]);
-
+  
   const completedOrders = useMemo(() => {
     return orders.filter((order) => {
-      const estado = String(order.estado || order.status || "").toLowerCase();
-
-      return (
-        estado.includes("entregado") ||
-        estado.includes("finalizado") ||
-        estado.includes("completado")
-      );
+      return isCompletedOrder(order);
     });
   }, [orders]);
 
@@ -424,41 +472,397 @@ function ProfileSection({ profile, setProfile, saveProfile }) {
 }
 
 function OrdersSection({ activeOrders, completedOrders, allOrders }) {
-  return (
-    <section className="space-y-8">
-      <div>
-        <SectionTitle
-          title="Mis pedidos"
-          subtitle="Revisá tus compras, estado del pedido e historial."
+    const [selectedOrder, setSelectedOrder] = useState(null);
+  
+    if (selectedOrder) {
+      return (
+        <OrderDetailView
+          order={selectedOrder}
+          onBack={() => setSelectedOrder(null)}
         />
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <ProfileMetric
-            title="Pedidos totales"
-            value={allOrders.length}
-            detail="Compras registradas"
+      );
+    }
+  
+    return (
+      <section className="space-y-10">
+        <div>
+          <SectionTitle
+            title="Mis pedidos"
+            subtitle="Revisá tus compras y el estado de cada pedido."
           />
+  
+          <div className="grid gap-4 md:grid-cols-2">
+            <ProfileMetric
+              title="Pedidos totales"
+              value={allOrders.length}
+              detail="Compras registradas"
+            />
+  
+            <ProfileMetric
+              title="Pedidos en seguimiento"
+              value={allOrders.length}
+              detail="Con estado visible"
+            />
+          </div>
+        </div>
+  
+        <OrderCardList
+          title="Tus pedidos"
+          orders={allOrders}
+          onSelect={setSelectedOrder}
+        />
+      </section>
+    );
+  }
 
-          <ProfileMetric
-            title="Pedidos activos"
-            value={activeOrders.length}
-            detail="Pendientes o en proceso"
+  
+  function OrderCardList({ title, orders, onSelect }) {
+    return (
+      <section>
+        <SectionTitle title={title} />
+  
+        <div className="grid gap-5">
+          {orders.map((order, index) => (
+            <OrderSummaryCard
+              key={order.id || order.orderId || index}
+              order={order}
+              index={index}
+              onSelect={onSelect}
+            />
+          ))}
+  
+          {orders.length === 0 && (
+            <div className="rounded-xl border border-white/10 bg-zinc-900/80 px-6 py-10 text-center text-zinc-500">
+              No hay pedidos para mostrar.
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+  
+  function OrderSummaryCard({ order, index, onSelect }) {
+    const id =
+      order.id || order.orderId || `MS-${String(index + 1).padStart(4, "0")}`;
+  
+    const date = order.fecha || order.date || order.createdAt;
+    const total = order.total || order.totalFinal || order.precioTotal || 0;
+    const status = order.estado || order.status || "Procesando";
+  
+    const items =
+      order.items ||
+      order.productos ||
+      order.detalles ||
+      order.detalleProductos ||
+      order.cart ||
+      [];
+  
+    return (
+      <article className="rounded-xl border border-white/10 bg-zinc-900/80 p-6 transition hover:border-[#ba203f]/60">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#ba203f]">
+              Pedido
+            </p>
+  
+            <h3 className="mt-1 text-2xl font-bold text-white">#{id}</h3>
+  
+            <p className="mt-2 text-sm text-zinc-500">
+              Fecha: {normalizeOrderDate(date)}
+            </p>
+          </div>
+  
+          <div className="flex flex-wrap items-center gap-4">
+            <StatusBadge status={status} />
+  
+            <div className="text-right">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Total
+              </p>
+              <p className="text-2xl font-bold text-[#f0b3b3]">
+                {money(total)}
+              </p>
+            </div>
+  
+            <button
+              onClick={() => onSelect(order)}
+              className="rounded-md bg-[#ba203f] px-5 py-3 text-sm font-bold uppercase tracking-widest text-white hover:bg-red-700"
+            >
+              Ver pedido
+            </button>
+          </div>
+        </div>
+  
+        <div className="mt-6 flex flex-wrap gap-3">
+          {items.slice(0, 3).map((item, itemIndex) => {
+            const product = item.producto || item.product || item;
+            const name = product.nombre || item.nombre || "Producto";
+            const quantity = item.cantidad || item.quantity || 1;
+  
+            return (
+              <div
+                key={itemIndex}
+                className="rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm"
+              >
+                <p className="font-semibold text-white">{name}</p>
+                <p className="text-xs text-zinc-500">Cantidad: {quantity}</p>
+              </div>
+            );
+          })}
+  
+          {items.length > 3 && (
+            <div className="rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-zinc-400">
+              +{items.length - 3} productos más
+            </div>
+          )}
+        </div>
+      </article>
+    );
+  }
+  
+  function OrderDetailView({ order, onBack }) {
+    const id = order.id || order.orderId || "MS";
+    const date = order.fecha || order.date || order.createdAt;
+    const status = order.estado || order.status || "Procesando";
+  
+    const subtotal = order.subtotal || order.subtotalProductos || 0;
+    const envio = order.envio || order.shipping || 0;
+    const total = order.total || order.totalFinal || order.precioTotal || 0;
+  
+    const items =
+      order.items ||
+      order.productos ||
+      order.detalles ||
+      order.detalleProductos ||
+      order.cart ||
+      [];
+  
+    return (
+      <section className="space-y-8">
+        <div className="flex flex-col gap-4">
+          <div>
+            <button
+              onClick={onBack}
+              className="mb-4 text-sm font-semibold uppercase tracking-widest text-[#ba203f] hover:text-white"
+            >
+              ← Volver a mis pedidos
+            </button>
+  
+            <p className="text-sm font-semibold uppercase tracking-widest text-[#ba203f]">
+              Mi perfil / Pedidos
+            </p>
+  
+            <h2 className="mt-3 text-3xl font-bold text-white">
+              Detalles del pedido
+            </h2>
+  
+            <p className="mt-2 text-xl uppercase tracking-widest text-zinc-500">
+              Pedido #{id}
+            </p>
+          </div>
+        </div>
+  
+        <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-8">
+          <div className="mb-8">
+            <p className="text-sm font-semibold text-white">Estado del envío</p>
+            <p className="mt-1 text-sm text-[#ba203f]">
+              Fecha de compra: {normalizeOrderDate(date)}
+            </p>
+          </div>
+  
+          <OrderTimeline status={status} />
+        </div>
+  
+        <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr]">
+          <div>
+            <h3 className="mb-5 text-xl font-bold text-white">
+              Resumen de productos
+            </h3>
+  
+            <div className="space-y-4">
+              {items.map((item, index) => {
+                const product = item.producto || item.product || item;
+                const name = product.nombre || item.nombre || "Producto";
+                const quantity = item.cantidad || item.quantity || 1;
+  
+                const price =
+                  item.precioUnitario ||
+                  item.precio ||
+                  item.price ||
+                  product.precio ||
+                  0;
+  
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-zinc-900/80 p-5"
+                  >
+                    <div>
+                      <p className="text-lg font-semibold text-white">{name}</p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        Cantidad: {quantity}
+                      </p>
+                    </div>
+  
+                    <p className="text-lg font-bold text-white">
+                      {money(Number(price) * Number(quantity))}
+                    </p>
+                  </div>
+                );
+              })}
+  
+              {items.length === 0 && (
+                <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-8 text-center text-zinc-500">
+                  Este pedido no tiene detalle de productos guardado.
+                </div>
+              )}
+            </div>
+          </div>
+  
+          <aside className="space-y-5">
+            <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
+                Dirección de envío
+              </h3>
+  
+              <p className="mt-4 text-white">
+                {order.direccion ||
+                  order.direccionEnvio ||
+                  "Dirección no especificada"}
+              </p>
+  
+              <p className="mt-2 text-sm text-zinc-500">
+                {order.telefono || "Teléfono no especificado"}
+              </p>
+            </div>
+  
+            <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
+                Método de pago
+              </h3>
+  
+              <p className="mt-4 text-white">
+                {formatPaymentMethod(order.metodoPago || order.paymentMethod)}
+              </p>
+  
+              <p className="mt-2 text-sm text-zinc-500">Pago registrado</p>
+            </div>
+  
+            <div className="rounded-xl border border-white/10 bg-zinc-900/80 p-6">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Subtotal</span>
+                  <span className="text-white">{money(subtotal)}</span>
+                </div>
+  
+                <div className="flex justify-between text-zinc-400">
+                  <span>Envío</span>
+                  <span className="text-white">{money(envio)}</span>
+                </div>
+  
+                <div className="border-t border-white/10 pt-4">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span className="text-[#ba203f]">{money(total)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    );
+  }
+  
+  function OrderTimeline({ status }) {
+    const normalized = String(status || "").toLowerCase();
+  
+    let currentStep = 1;
+  
+    if (
+      normalized.includes("prepar") ||
+      normalized.includes("procesando") ||
+      normalized.includes("pagado")
+    ) {
+      currentStep = 2;
+    }
+  
+    if (
+      normalized.includes("camino") ||
+      normalized.includes("enviado") ||
+      normalized.includes("shipping")
+    ) {
+      currentStep = 3;
+    }
+  
+    if (
+      normalized.includes("entregado") ||
+      normalized.includes("completado") ||
+      normalized.includes("finalizado")
+    ) {
+      currentStep = 4;
+    }
+  
+    const steps = [
+      "Pedido confirmado",
+      "En preparación",
+      "En camino",
+      "Entregado",
+    ];
+  
+    return (
+      <div>
+        <div className="relative grid grid-cols-4 gap-2">
+          <div className="absolute left-0 right-0 top-6 h-1 bg-zinc-800" />
+          <div
+            className="absolute left-0 top-6 h-1 bg-[#ba203f]"
+            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
           />
-
-          <ProfileMetric
-            title="Finalizados"
-            value={completedOrders.length}
-            detail="Entregados o completados"
-          />
+  
+          {steps.map((step, index) => {
+            const active = index + 1 <= currentStep;
+  
+            return (
+              <div
+                key={step}
+                className="relative z-10 flex flex-col items-center gap-3 text-center"
+              >
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full border-4 border-black text-lg font-bold ${
+                    active
+                      ? "bg-[#ba203f] text-white"
+                      : "bg-zinc-800 text-zinc-500"
+                  }`}
+                >
+                  ✓
+                </div>
+  
+                <p
+                  className={`text-sm font-semibold ${
+                    active ? "text-white" : "text-zinc-500"
+                  }`}
+                >
+                  {step}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      <OrderTable title="Pedidos activos" orders={activeOrders} />
-
-      <OrderTable title="Historial de pedidos" orders={completedOrders} />
-    </section>
-  );
-}
+    );
+  }
+  
+  function formatPaymentMethod(method) {
+    const value = String(method || "").toLowerCase();
+  
+    if (value.includes("credito")) return "Tarjeta de crédito";
+    if (value.includes("debito")) return "Tarjeta de débito";
+    if (value.includes("mercadopago")) return "Mercado Pago";
+    if (value.includes("transferencia")) return "Transferencia electrónica";
+    if (value.includes("efectivo")) return "Efectivo al retirar";
+  
+    return "Método no especificado";
+  }
 
 function ProfileMetric({ title, value, detail }) {
   return (
