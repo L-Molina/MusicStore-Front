@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Carrito from "./Components/Carrito/Carrito";
 import Catalogo from "./Components/Catalogo/Catalogo";
 import Checkout from "./Components/Checkout/Checkout";
+import CompraExitosa from "./Components/CompraExitosa/CompraExitosa";
 import DetalleProducto from "./Components/DetalleProducto/DetalleProducto";
 import Favoritos from "./Components/Favoritos/Favoritos";
 import Home from "./Components/Home/Home";
@@ -43,6 +44,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Checkout />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="compra-exitosa"
+            element={
+              <ProtectedRoute>
+                <CompraExitosa />
               </ProtectedRoute>
             }
           />
